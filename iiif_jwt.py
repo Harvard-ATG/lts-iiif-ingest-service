@@ -3,8 +3,6 @@ import logging
 from multiprocessing.sharedctypes import Value
 import os
 import jwt
-from cryptography.hazmat.primitives import serialization
-
 from settings import ROOT_DIR
 
 
