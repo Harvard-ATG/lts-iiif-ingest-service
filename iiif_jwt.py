@@ -1,4 +1,5 @@
-import datetime
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 import logging
 from multiprocessing.sharedctypes import Value
 import os
@@ -48,17 +49,17 @@ def make_iiif_jwt(
     """
     logger.info("Make IIIF LTS jwt")
     
-    timestamp = datetime.datetime.now()
+    timestamp = datetime.now(ZoneInfo("America/New_York"))
     header = {
-        "alg": algorithm,
         "typ": "JWT",
+        "alg": algorithm,
         "iss": issuer,
         "kid": kid,
         "resources": resources
     }
     payload = {
         "iat": timestamp,
-        "exp": expiration
+        "exp": timestamp + timedelta(seconds = expiration)
     }
 
     private_key = open(private_key_path, "r").read()
@@ -80,7 +81,7 @@ def load_auth(issuer: str, environment: str = "qa"):
 
     os.environ['ENVIRONMENT'] = environment
     os.environ['ISSUER'] = issuer
-    os.environ['KEY_ID'] = f"${issuer}default"
+    os.environ['KEY_ID'] = f"{issuer}default"
     os.environ['PUBLIC_KEY_PATH'] = os.path.join(ROOT_DIR, f"auth/{environment}/keys/{issuer}/{issuer}default/public.key")
     os.environ['PRIVATE_KEY_PATH'] = os.path.join(ROOT_DIR, f"auth/{environment}/keys/{issuer}/{issuer}default/private.key")
 
@@ -89,9 +90,10 @@ def test():
     load_auth("atmch", "qa")
     token = make_iiif_jwt(
         os.environ.get("ISSUER"),
-        ["ingest", "content", "description"],
+        # ["ingest", "content", "description"],
+        ["ingest"],
         os.environ.get("PRIVATE_KEY_PATH"),
-        os.environ.get("KEY_ID")
+        os.environ.get("KEY_ID"),
     )
     print(token)
 
