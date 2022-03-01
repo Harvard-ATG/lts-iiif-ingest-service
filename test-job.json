@@ -1,0 +1,167 @@
+{
+    "globalSettings": {
+      "actionDefault": "update",
+      "spaceDefault": "atdarth"
+    },
+    "metadata": {},
+    "assets": {
+      "audio": [],
+      "video": [],
+      "text": [],
+      "image": [
+        {
+          "action": "create",
+          "sourceSystemId": "SOURCE_SYSTEM_ID_HERE_____",
+          "storageSrcPath": "/",
+          "storageSrcKey": "27.586.1-cm-2016-02-09.tif",
+          "storageDestKey": "27.586.1-cm-2016-02-09.tif",
+          "storageDestPath": "/",
+          "identifier": "drs:400000204____???",
+          "space": "atdarth",
+          "createdByAgent": "drsagent___???",
+          "createDate": "2022-02-28 17:14:36",
+          "lastModifiedByAgent": "drsagent______???",
+          "lastModifiedDate": "2022-02-28 17:14:36",
+          "status": "ACTIVE",
+          "iiifApiVersion": "3",
+          "assetLocation": "iiif/400000204.jp2_____???HOWISTHISDIFFERENTTHAN_storageDestPath+Key",
+          "mediaType": "image",
+          "policyDefinition": {
+            "policyGroupName": "default"
+          },
+          "assetMetadata": [
+            {
+              "fieldName": "admin",
+              "__comment": "____ where is this assetMetadata stored, what is it used for, is it required?",
+              "jsonValue": {
+                "name": "Hello there!",
+                "description": "A test description",
+                "type": "Standard",
+                "pages": "120",
+                "rating": "10",
+                "shelf": "1A",
+                "case": "Cabinet 1"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "manifest": {
+      "@context": "http://iiif.io/api/presentation/3/context.json",
+      "id": "https://nrs-qa.lib.harvard.edu/{URN???}:MANIFEST:3",
+      "type": "Manifest",
+      "label": "Test DARTH manifest",
+      "requiredStatement": {
+        "label": {
+          "en": [
+            "Attribution"
+          ]
+        },
+        "value": {
+          "en": [
+            "Jinah Kim"
+          ]
+        }
+      },
+      "metadata": [
+        {
+            "label": {
+              "en": [
+                "Creator"
+              ]
+            },
+            "value": {
+              "en": [
+                "Unknown"
+              ]
+            }
+          }
+      ],
+      "rights": "http://creativecommons.org/licenses/by-sa/3.0/",
+      "behavior": [
+        "paged"
+      ],
+      "items": [
+          {
+              "id": "",
+              "type": "Canvas",
+              "label": {
+                  "en": [
+                      "Test image 1"
+                  ]
+              },
+              "height": 564,
+              "width": 3600,
+              "items": [
+                  {
+                      "id": "???",
+                      "type": "AnnotationPage",
+                      "items": [
+                          {
+                            "id": "???",
+                            "type": "Annotation",
+                            "motivation": "painting",
+                            "body": {
+                                "id": "",
+                                "type": "Image",
+                                "format": "image/tiff",
+                                "height": 564,
+                                "width": 3600,
+                                "service": [
+                                    {
+                                        "id": "???",
+                                        "type": "ImageService3",
+                                        "profile": "level1"
+                                    }
+                                ]
+                            },
+                            "target": "???"
+                          } 
+                      ]
+                  }
+              ]
+          },
+          {
+              "id": "???",
+              "type": "Canvas",
+              "label": {
+                  "en": [
+                      "Test image 2"
+                  ]
+              },
+              "height": 581,
+              "width": 3600,
+              "items": [
+                  {
+                      "id": "???",
+                      "type": "AnnotationPage",
+                      "items": [
+                          {
+                              "id": "???",
+                              "type": "Annotation",
+                              "motivation": "painting",
+                              "body": {
+                                  "id": "???",
+                                  "type": "Image",
+                                  "format": "image/tiff",
+                                  "height": 581,
+                                  "width": 3600,
+                                  "service": [
+                                    {
+                                        "id": "???",
+                                        "type": "ImageService3",
+                                        "profile": "level1"
+                                    }
+                                ]
+                              },
+                              "target": "???"
+                          }
+                      ]
+                  }
+              ]
+          }
+      ]
+    }
+  }
+  
