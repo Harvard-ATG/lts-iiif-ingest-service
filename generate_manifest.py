@@ -139,21 +139,5 @@ def test():
     manifest.json_save("test-manifest.json")
     return manifest
 
-# class Canvas:
-#     """Represents a IIIF canvas"""
-#     def __init__(self, label: str, id: str, width: int = None, height: int = None, metadata: list = None, service: str = "/full/max/0/default.jpg"):
-#         self.label = label
-#         self.id = id
-#         self.service = service
-#         if(not width or not height):
-#             # Get and set these
-#             print("no width and/or height passed")
-#         else:
-#             self.width = width
-#             self.height = height
-#         if metadata:
-#             self.metadata = metadata
-
-
 if __name__ == '__main__':
     test()
