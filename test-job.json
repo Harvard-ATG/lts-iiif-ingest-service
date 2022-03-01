@@ -11,7 +11,7 @@
       "image": [
         {
           "action": "create",
-          "sourceSystemId": "SOURCE_SYSTEM_ID_HERE_____",
+          "sourceSystemId": "???",
           "storageSrcPath": "/",
           "storageSrcKey": "27.586.1-cm-2016-02-09.tif",
           "storageDestKey": "27.586.1-cm-2016-02-09.tif",
@@ -24,7 +24,7 @@
           "lastModifiedDate": "2022-02-28 17:14:36",
           "status": "ACTIVE",
           "iiifApiVersion": "3",
-          "assetLocation": "iiif/400000204.jp2_____???HOWISTHISDIFFERENTTHAN_storageDestPath+Key",
+          "assetLocation": "iiif/400000204.jp2_____??? not sure how this is different than storageDestPath+Key",
           "mediaType": "image",
           "policyDefinition": {
             "policyGroupName": "default"
