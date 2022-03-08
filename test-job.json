@@ -11,21 +11,16 @@
       "image": [
         {
           "action": "create",
-          "sourceSystemId": "???",
           "storageSrcPath": "/",
           "storageSrcKey": "27.586.1-cm-2016-02-09.tif",
-          "storageDestKey": "27.586.1-cm-2016-02-09.tif",
-          "storageDestPath": "/",
-          "identifier": "drs:400000204____???",
+          "identifier": "AT:TESTASSET2",
           "space": "atdarth",
-          "createdByAgent": "drsagent___???",
+          "createdByAgent": "atagent",
           "createDate": "2022-02-28 17:14:36",
-          "lastModifiedByAgent": "drsagent______???",
+          "lastModifiedByAgent": "atagent",
           "lastModifiedDate": "2022-02-28 17:14:36",
           "status": "ACTIVE",
           "iiifApiVersion": "3",
-          "assetLocation": "iiif/400000204.jp2_____??? not sure how this is different than storageDestPath+Key",
-          "mediaType": "image",
           "policyDefinition": {
             "policyGroupName": "default"
           },
@@ -49,9 +44,9 @@
     },
     "manifest": {
       "@context": "http://iiif.io/api/presentation/3/context.json",
-      "id": "https://nrs-qa.lib.harvard.edu/{URN???}:MANIFEST:3",
+      "id": "https://nrs-qa.lib.harvard.edu/URN-3:AT:TESTMANIFEST2:MANIFEST:3",
       "type": "Manifest",
-      "label": "Test DARTH manifest",
+      "label": "Test DARTH manifest - Cole ",
       "requiredStatement": {
         "label": {
           "en": [
@@ -84,7 +79,7 @@
       ],
       "items": [
           {
-              "id": "",
+              "id": "https://nrs-qa.lib.harvard.edu/URN-3:AT:{???}/canvas/canvas-{system namespace}:{system-specific ID}",
               "type": "Canvas",
               "label": {
                   "en": [
