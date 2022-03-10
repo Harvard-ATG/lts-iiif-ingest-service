@@ -35,6 +35,6 @@ File hierarchy:
 
 ## Examples and notes
 - Upload a file: `python3 bucket.py --file=/Users/colecrawford/Github/lts-iiif-ingest-service/test_images/27.586.1-cm-2016-02-09.tif --bucket=edu.harvard.huit.lts.mps.at-atdarth-dev`
-- Check it was uploaded: `aws s3 ls edu.harvard.huit.lts.mps.at-atdarth-dev`
+- Check it was uploaded: `aws s3 ls edu.harvard.huit.lts.mps.at-atdarth-dev` or `aws s3 ls s3://edu.harvard.huit.lts.mps.at-atdarth-dev --recursive --human-readable --summarize`
 - Generate a JWT token: `python3 iiif_jwt.py`
 - QA MPS endpoint: `https://mps-admin-qa.lib.harvard.edu/admin/ingest/initialize`
