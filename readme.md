@@ -41,7 +41,8 @@ File hierarchy:
 
 
 ## Ingesting images and simple V2 manifest via Postman and without manifest generation(iiifpres module)
-- Upload a file using bucket.py via [Examples and notes](#examples-and-notes) or the command below: 
+Prerequisite if you are using `aws cli`, you must set `export AWS_PROFILE=<BUCKET CREDENTIALS>` to your desired bucket corresponding to your `.aws/credentials` permissions to upload files
+- Upload a file using `bucket.py` via [Examples and notes](#examples-and-notes) or the command below: 
 ```
 $ export IIIF_QA_BUCKET=edu.harvard.huit.lts.mps.at-atomeka-qa
 $ aws s3 cp ./test_images/27.586.2A-cm-2016-02-09.tif s3://$IIIF_QA_BUCKET/iiif/
