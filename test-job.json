@@ -70,7 +70,11 @@
     "@context": "http://iiif.io/api/presentation/3/context.json",
     "id": "https://nrs-qa.lib.harvard.edu/URN-3:AT:TESTMANIFEST3:MANIFEST:3",
     "type": "Manifest",
-    "label": "Test DARTH manifest - Cole ",
+    "label": {
+      "en": [
+        "Test DARTH manifest - Cole "
+      ]
+    },
     "requiredStatement": {
       "label": {
         "en": [
