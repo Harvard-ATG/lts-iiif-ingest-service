@@ -2,9 +2,8 @@ from IIIFpres import iiifpapi3
 import os
 import jsonschema
 import json
-import urllib.parse
 
-# TODO: create a lang parameter, default of "en"
+iiifpapi3.INVALID_URI_CHARACTERS = iiifpapi3.INVALID_URI_CHARACTERS.replace(":","") # See https://github.com/giacomomarchioro/pyIIIFpres/issues/11
 
 def createManifest(
     base_url: str,
@@ -21,9 +20,11 @@ def createManifest(
     namespace_prefix: str = "AT" 
 ) -> iiifpapi3.Manifest():
     """ Creates and validates a IIIF manifest """
-    iiifpapi3.BASE_URL = base_url
+    
     manifest = iiifpapi3.Manifest()
-    manifest.set_id()
+    iiifpapi3.BASE_URL = base_url + "/"
+    manifest.set_id(objid=base_url)
+    
     for label in labels:
         manifest.add_label(label.get("lang", default_lang), label["label"] )
     for behavior in behaviors:
@@ -56,7 +57,7 @@ def createManifest(
         canvas.set_id(extendbase_url= f"canvas/canvas-{namespace_prefix}:{ d.get('asset_id') }")
         canvas.set_height(d["height"])
         canvas.set_width(d["width"])
-        if(type(d["label"] is dict)):
+        if(type(d["label"]) is dict):
             canvas.add_label(d["label"].get("lang", "default_lang"), d["label"].get("value"))
         else:
             canvas.add_label(default_lang, d["label"])
@@ -85,6 +86,9 @@ def createManifest(
         s.set_profile(service_profile)
     
     # TODO: Validate the manifest here before returning
+    # slightly hacky - pyIIIFpres wants either the objid or extendbase_url to end in "/", but throws an error even if I add extendbase_url="/"
+    # we want an ID without the trailing slash, so pass base_url without it; add the "/" manually in line 27; then set manifest.id back to no slash here
+    manifest.id = base_url 
     return manifest
 
 
@@ -103,6 +107,7 @@ def validateManifest(manifest: iiifpapi3.Manifest(), read_from_file: bool = True
         with open("iiif_3_0.json") as schema:
             jsonschema.validate(instance=json.load(instance),schema=json.load(schema))
 
+# TODO move tests to an actual tests file, generate test manifests and read in and compare
 
 def cookbook_test():
     manifest = createManifest(
@@ -164,7 +169,7 @@ def cookbook_test():
 
 def mps_mcih_ingest_test():
     manifest = createManifest(
-        base_url = "https://nrs-qa.lib.harvard.edu/URN-3:AT:TESTMANIFEST3:MANIFEST:3/",
+        base_url = "https://nrs-qa.lib.harvard.edu/URN-3:AT:TESTMANIFEST3:MANIFEST:3",
         labels = [
             {
                 "lang": "en",
@@ -180,21 +185,6 @@ def mps_mcih_ingest_test():
             }
         ],
         canvases = [
-            {  
-                "label": "Frontispiece",
-                "width": 3186,
-                "height": 4612,
-                "id": "https://iiif.io/api/image/3.0/example/reference/59d09e6773341f28ea166e9f3c1e674f-gallica_ark_12148_bpt6k1526005v_f19",
-                "service":"/full/max/0/default.jpg",
-                "metadata": [
-                    {
-                        "label": "Reference",
-                        "value": "ID124",
-                        "label_lang": "en",
-                        "value_lang": "en"
-                    }
-                ]
-             },
              {
                  "label": "Test image 1", # this can be a string, which uses the default_lang, or a dict with lang/value
                  "height": 564,
@@ -207,7 +197,7 @@ def mps_mcih_ingest_test():
              },
              {
                  "label": "Test image 2",
-                 "height": 681,
+                 "height": 581,
                  "width": 3600,
                  "asset_id": "TESTASSET4",
                  "id": "https://mps-qa.lib.harvard.edu/assets/images/AT:TESTASSET4",

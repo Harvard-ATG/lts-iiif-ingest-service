@@ -128,7 +128,7 @@
               "width": 3600,
               "service": [{
                 "id": "https://mps-qa.lib.harvard.edu/assets/images/AT:TESTASSET3",
-                "type": "ImageService3",
+                "type": "ImageService2",
                 "profile": "level2"
               }]
             },
