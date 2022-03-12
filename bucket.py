@@ -23,10 +23,7 @@ def upload_image_get_metadata(image_path, bucket_name, s3_path="", session=None)
     # obj = s3.Object(bucket_name, f"{s3_path}{file_name}")
     # obj.put(Body=bytes_data)
 
-    # get the image metadata
-    img = Image.open(image_path)
-    width, height = img.size
-    format = img.get_format_mimetype()
+
 
     key = f"{s3_path}{file_name}" if s3_path else file_name
 
@@ -36,13 +33,7 @@ def upload_image_get_metadata(image_path, bucket_name, s3_path="", session=None)
             Filename=image_path,
             Key=key
         )
-        return {
-            # "response": response, # upload_file doesn't return a response?
-            "filename": key,
-            "height": height,
-            "width": width,
-            "format": format
-        }
+        return key
     except ClientError as e:
         logging.error(e)
         return False
