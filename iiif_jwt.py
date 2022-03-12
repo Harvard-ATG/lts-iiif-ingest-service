@@ -89,11 +89,10 @@ def load_auth(issuer: str, environment: str = "qa"):
 def test():
     load_auth("atmch", "qa")
     token = make_iiif_jwt(
-        os.environ.get("ISSUER"),
-        # ["ingest", "content", "description"],
-        ["ingest"],
-        os.environ.get("PRIVATE_KEY_PATH"),
-        os.environ.get("KEY_ID"),
+        issuer=os.environ.get("ISSUER"),
+        resources=["ingest"], # ["ingest", "content", "description"],
+        private_key_path=os.environ.get("PRIVATE_KEY_PATH"),
+        kid=os.environ.get("KEY_ID"),
     )
     print(token)
 
