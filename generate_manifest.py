@@ -75,13 +75,13 @@ def createManifest(
         annotation = annopage.add_annotation_to_items(target=canvas.id) # TODO: think about handling multiple annotations (images) per canvas
         annotation.set_id(extendbase_url = f"annotation/annotation-{namespace_prefix}:{d.get('asset_id')}")
         annotation.set_motivation("painting")
-        annotation.body.set_id(f"{d['id']}{d['service']}")
+        annotation.body.set_id(f"{d.get('id')}{d.get('service')}")
         annotation.body.set_type("Image")
-        annotation.body.set_format(d.get("format", "image/jpeg"))
-        annotation.body.set_width(d["width"])
-        annotation.body.set_height(d["height"])
+        annotation.body.set_format(d.get("format"))
+        annotation.body.set_width(d.get("width"))
+        annotation.body.set_height(d.get("height"))
         s = annotation.body.add_service()
-        s.set_id(d["id"])
+        s.set_id(d.get("id"))
         s.set_type(service_type)
         s.set_profile(service_profile)
     
@@ -191,8 +191,8 @@ def mps_mcih_ingest_test():
                  "width": 3600,
                  "asset_id": "TESTASSET3", # canvas.id
                  "id": "https://mps-qa.lib.harvard.edu/assets/images/AT:TESTASSET3", #service.id
-                 "service": "/full/max/0/default.tif", #anno.id = service.id + service
-                 "format": "image/tiff",
+                 "service": "/full/max/0/default.tif", #anno.id = service.id + service; should have a default service based on format
+                 "format": "image/tiff", # could get this from the filepath
                  "metadata": []
              },
              {
