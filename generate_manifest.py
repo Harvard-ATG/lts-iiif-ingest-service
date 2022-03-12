@@ -10,14 +10,14 @@ def createManifest(
     labels: list, 
     canvases: list,
     behaviors: list = ["paged"],
-    manifest_metadata: list = None,
-    rights: str = None,
-    required_statement: list = None,
     default_lang: str = "en",
     service_type: str = "ImageService2", # Image API level - see https://iiif.io/api/presentation/3.0/#service
     service_profile: str = "level2", # Compliance level - see https://iiif.io/api/image/2.1/compliance/ and https://iiif.io/api/image/3.0/compliance/
     # service_id: str = "https://mps-qa.lib.harvard.edu/assets/images/", # Currently set in annotation.id; used for annotation.body.id and service.id; this is MPS rather than NRS; could be hoisted to here
-    namespace_prefix: str = "AT" 
+    namespace_prefix: str = "AT",
+    manifest_metadata: list = None,
+    rights: str = None,
+    required_statement: list = None,
 ) -> iiifpapi3.Manifest():
     """ Creates and validates a IIIF manifest """
     
