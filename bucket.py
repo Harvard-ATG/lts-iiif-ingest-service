@@ -16,14 +16,14 @@ def upload_image_get_metadata(image_path, bucket_name, s3_path="", session=None)
 
     file_dir, file_name = os.path.split(image_path)
     # make sure s3_path ends in a slash
+    if (s3_path is not None) and (not s3_path.endswith("/")):
+        s3_path += "/"
 
     # extend to handle in-memory later, once we have file upload on an application
     # https://thecodinginterface.com/blog/aws-s3-python-boto3/
     # bytes_data = 
     # obj = s3.Object(bucket_name, f"{s3_path}{file_name}")
     # obj.put(Body=bytes_data)
-
-
 
     key = f"{s3_path}{file_name}" if s3_path else file_name
 
