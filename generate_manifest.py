@@ -7,8 +7,9 @@ iiifpapi3.INVALID_URI_CHARACTERS = iiifpapi3.INVALID_URI_CHARACTERS.replace(":",
 
 def createManifest(
     base_url: str,
-    labels: list, 
+    labels: list, # of dicts or strings
     canvases: list,
+    providers: list = [],
     behaviors: list = ["paged"],
     default_lang: str = "en",
     service_type: str = "ImageService2", # Image API level - see https://iiif.io/api/presentation/3.0/#service
@@ -18,6 +19,8 @@ def createManifest(
     manifest_metadata: list = None,
     rights: str = None,
     required_statement: list = None,
+    summary: list = None, # can also be str
+    thumbnails: list = None
 ) -> iiifpapi3.Manifest():
     """ Creates and validates a IIIF manifest """
     
@@ -26,7 +29,10 @@ def createManifest(
     manifest.set_id(objid=base_url)
     
     for label in labels:
-        manifest.add_label(label.get("lang", default_lang), label["label"] )
+        if(isinstance(label, str)):
+            manifest.add_label(default_lang, label)
+        else:
+            manifest.add_label(label.get("lang", default_lang), label["label"] )
     for behavior in behaviors:
         manifest.add_behavior(behavior)
     
@@ -50,6 +56,33 @@ def createManifest(
                 language_l=m.get("label_lang", default_lang),
                 language_v=m.get("value_lang", default_lang)
             )
+    
+    if(providers):
+        # https://iiif.io/api/cookbook/recipe/0234-provider/
+        # https://github.com/giacomomarchioro/pyIIIFpres/blob/main/examples/0234-provider.py
+        # TODO: set more provider fields eg homepage, logo, seeAlso
+        for p in providers:
+            prov = manifest.add_provider()
+            prov.set_id(p.get("id"))
+            prov.set_type()
+            for label in p["labels"]:
+                prov.add_label(language=label.get("lang", default_lang), text=label.get("value"))
+    
+    if(summary):
+        if(isinstance(summary, str)):
+            manifest.add_summary(language=default_lang, text=summary)
+        else:
+            for s in summary:
+                manifest.add_summary(language=s.get("lang", default_lang), text=s.get("value"))
+    
+    if(thumbnails):
+        for t in thumbnails:
+            thum = manifest.add_thumbnail()
+            thum.set_id(t.get("id"))
+            thum.set_type(t.get("type", "Image"))
+            thum.set_format(t.get("format", "image/jpeg"))
+            thum.set_height(t.get("height"))
+            thum.set_width(t.get("width"))
     
     for idx,d in enumerate(canvases):
         idx+=1 
