@@ -8,6 +8,7 @@ import iiif_jwt
 import os
 import shortuuid
 import mimetypes
+import json
 from PIL import Image
 
 class IIIFCanvas:
@@ -26,7 +27,9 @@ class IIIFCanvas:
         metadata: list = None
     ):
         self.filepath = filepath
-        path_filename, extension = os.path.splitext(filepath)
+        path_root, extension = os.path.splitext(filepath)
+        path_filename = os.path.basename(path_root)
+        print(f"IIIFCanvas - {self.filepath} | {path_filename} | {extension}")
         self.width = width
         self.height = height
 
@@ -36,6 +39,7 @@ class IIIFCanvas:
             asset_str += f":{shortuuid.uuid()}"
         self.asset_id = asset_str
         self.label = label or self.asset_id
+        mps_base = mps_base or "https://mps-qa.lib.harvard.edu/assets/images/AT:"
         self.id = f"{mps_base}{self.asset_id}"
 
         self.format = format or mimetypes.guess_type(filepath)
@@ -64,10 +68,10 @@ def createImageAsset(
     action: str = "create",
     createdByAgent: str = "atagent",
     lastModifiedByAgent: str = "atagent",
-    createDate: datetime = datetime.now(ZoneInfo("America/New_York")),
-    lastModifiedDate: datetime = datetime.now(ZoneInfo("America/New_York")),
+    createDate: str = datetime.now(ZoneInfo("America/New_York")).strftime("%Y-%m-%d %H:%M:%S"),
+    lastModifiedDate: str = datetime.now(ZoneInfo("America/New_York")).strftime("%Y-%m-%d %H:%M:%S"),
     status: str = "ACTIVE",
-    iiifApiVersion: int = 3,
+    iiifApiVersion: str = "3",
     policyDefinition: dict = { "policyGroupName": "default"},
     assetMetadata: list = []
 ) -> dict:
@@ -107,7 +111,7 @@ def wrapIngestRequest(
             "text": [],
             "image": assets
         },
-        manifest: manifest
+        "manifest": manifest
     }
     return req
 
@@ -122,7 +126,7 @@ def sendIngestRequest(
         headers = {
             "Authorization": f"Bearer {token}"
         },
-        data=req
+        json=req
     )
     return r
 
@@ -144,23 +148,6 @@ def ingestImages(
 ) -> bool:
     """Given an ordered list of dicts with filenames and metadata, upload images to S3,
     create a manifest, create a JWT, and kick off an ingest request"""
-    # Example images
-    # [
-    #     {
-    #         "label": "Canvas Title",
-    #         "filepath": "/usr/media/myfile.jpg", #LOCAL
-    #         "metadata": [
-    #             {
-    #                 "label": "Reference",
-    #                 "value": "ID124",
-    #                 "label_lang": "en",
-    #                 "value_lang": "en"
-    #             }
-    #         ],
-    #         "service": "/full/max/0/default.jpg",
-    #         "id": "https://mps-qa.lib.harvard.edu/assets/images/AT:TESTASSET3" 
-    #     }
-    # ]
 
     if not session:
         session = boto3._get_default_session()
@@ -169,7 +156,6 @@ def ingestImages(
     # Upload to S3
     for image in image_dicts:
         # get the image metadata
-        # TODO finish this - functionality moved from bucket; the bucket shouldn't need to return anything besides the s3key
         img = Image.open(image.get("filepath"))
         width, height = img.size
         format = img.get_format_mimetype()
@@ -183,9 +169,11 @@ def ingestImages(
         image["width"] = width
         image["height"] = height
         image["format"] = format
+        print(image)
     
     # Create manifest
     if not existing_manifest:
+        print("Creating manifests")
         canvases = []
         for image in image_dicts:
             # Create canvases
@@ -200,16 +188,23 @@ def ingestImages(
                 format=image.get("format", None),
                 metadata=image.get("metadata", []),
                 mps_base = mps_base or None,
-                format = image.get("format", None),
                 service = image.get("service", None)
             )
-            canvases.append(canvas.toDict) # pass as dicts, because generate_manifest is currently expecting a list of dicts, not list of IIIFCanvases
+            image_dict = canvas.toDict()
+            print("image dict")
+            print(image_dict)
+            canvases.append(image_dict) # pass as dicts, because generate_manifest is currently expecting a list of dicts, not list of IIIFCanvases
+            image["IIIFCanvas"] = image_dict
+            print("image")
+            print(image)
+            
         manifest_kwargs=dict(
             base_url = base_url,
             labels = manifest_level_metadata["labels"],
             canvases = canvases,
 
             behaviors = manifest_level_metadata.get("behaviors", None),
+            providers = manifest_level_metadata.get("providers", None),
             rights = manifest_level_metadata.get("rights", None),
             required_statement = manifest_level_metadata.get("required_statement", None),
             manifest_metadata=manifest_level_metadata.get("metadata", None),
@@ -220,6 +215,12 @@ def ingestImages(
         )
         # pass only args which are not None, so we can use the createManifest defaults
         manifest = generate_manifest.createManifest(**{k: v for k, v in manifest_kwargs.items() if v is not None})
+        print("------ Manifest ------")
+        print(type(manifest))
+        print(manifest)
+
+        print("------ test manifest ------")
+        # manifest.inspect()
     else:
         manifest = existing_manifest
 
@@ -234,28 +235,32 @@ def ingestImages(
         os.environ.get("PRIVATE_KEY_PATH"),
         os.environ.get("KEY_ID")
     )
+    print(token)
 
     # Create assets for ingest
     assets = []
     for image in image_dicts:
         file_dir, file_name = os.path.split(image.get("filepath"))
         asset = createImageAsset(
-            identifier = "???",
+            identifier = f"{manifest_level_metadata.get('namespace_prefix')}:{image.get('IIIFCanvas').get('asset_id')}",
             space = image.get("space", space_default),
             storageSrcPath = s3_path,
             storageSrcKey = file_name
             # handle other params later?
         )
         assets.append(asset)
+    print(assets)
     
     #Create request
     request_body = wrapIngestRequest(
         assets=assets,
-        manifest=manifest,
+        manifest=json.loads(manifest.json_dumps()),
         metadata={},
         space_default=space_default,
         action_default="upsert"
     )
+    print("request_body --------------------")
+    print(request_body)
 
     # Send request
     r = sendIngestRequest(
@@ -263,6 +268,8 @@ def ingestImages(
         endpoint = endpoint,
         token = token
     )
+    response_dict = json.loads(r.text)
+    print(json.dumps(response_dict, indent=4, sort_keys=True))
     
     #what should this return? The job id should be in the response, use that and the endpoint to check on status
     return r        
@@ -290,11 +297,26 @@ def test_ingest_pipeline():
         }
     ]
     ingestImages(
-        images=images,
+        image_dicts=images,
         issuer="atdarth",
         manifest_level_metadata=dict(
-            labels=[],
-            metadata=[],
+            labels=[
+                "Test Manifest MCIH"
+            ],
+            metadata=[
+                {
+                    "label": "Creator",
+                    "value": "Unknown",
+                    "label_lang": "en",
+                    "value_lang": "en"
+                },
+                {
+                    "label": "Date",
+                    "value": "19th Century",
+                    "label_lang": "en",
+                    "value_lang": "en"
+                }
+            ],
             required_statement=[
                 {
                     "label": "Attribution",
@@ -305,28 +327,36 @@ def test_ingest_pipeline():
             namespace_prefix="AT",
             service_type="ImageService2",
             service_profile="level2",
-            rights="http://creativecommons.org/licenses/by-sa/3.0/"
+            rights="http://creativecommons.org/licenses/by-sa/3.0/",
+            summary="A test manifest for Mapping Color in History ingest into MPS IIIF delivery solution",
+            providers = [
+                {
+                    "labels": [
+                        {
+                            "lang": "en",
+                            "value": "Harvard University - Arts and Humanities Research Computing (organizing org)"
+                        }
+                    ],
+                    "id": "http://id.loc.gov/authorities/names/n78096930"
+                },
+                {
+                    "labels": [
+                        {
+                            "value": "Harvard Art Museum (providing org)"
+                        }
+                    ],
+                    "id": "http://id.loc.gov/authorities/names/no2008065752"
+                }
+            ]
         ),
-        base_url="",
-        bucket_name="",
+        base_url=f"https://nrs-qa.lib.harvard.edu/URN-3:AT:TEST{shortuuid.uuid()}:MANIFEST:3",
+        bucket_name="edu.harvard.huit.lts.mps.at-atdarth-qa",
+        s3_path = "mcih/",
         space_default="atdarth",
-        endpoint="",
-        environment="qa"
+        endpoint="https://mps-admin-qa.lib.harvard.edu/admin/ingest/initialize",
+        environment="qa",
+        asset_app_prefix="MCIH:"
     )
 
 if __name__ == '__main__':
     test_ingest_pipeline()
-
-
-                base_url = base_url,
-            labels = manifest_level_metadata["labels"],
-            canvases = canvases,
-
-            behaviors = manifest_level_metadata.get("behaviors", None),
-            rights = manifest_level_metadata.get("rights", None),
-            required_statement = manifest_level_metadata.get("required_statement", None),
-            manifest_metadata=manifest_level_metadata.get("metadata", None),
-            default_lang=manifest_level_metadata.get("default_lang", None), #need to add this?
-            namespace_prefix=manifest_level_metadata.get("namespace_prefix", None), # need to add this?
-            service_type=manifest_level_metadata.get("service_type", None), #need to add this ?
-            service_profile=manifest_level_metadata.get("service_profile", None) #need to add this
