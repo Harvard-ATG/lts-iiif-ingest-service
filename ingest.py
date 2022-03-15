@@ -14,15 +14,15 @@ from PIL import Image
 class IIIFCanvas:
     def __init__(
         self,
-        filepath: str,
+        filepath: str, # Do we need this? Or can we get away with just having path_filename? In a cloud environment probably won't have a local reference
         width: int,
         height: int,
-        asset_id: str = None, #recommended
+        asset_id: str = None, # Alphanumeric only. If None, it is generated. Asset_app_prefix (eg MCIH) + path_filename (eg /test_images/mcihtest1.tif = mcihtest) + uuid if add_uuid, eg AT:MCIHmcihtest1Dj73bjEbHfjwXBoLH5MWgm
         add_uuid: bool = False,
-        asset_app_prefix: str = "", # "MCIH:"
-        label: str = None,
+        asset_app_prefix: str = "", # eg "MCIH" - only alphanumeric, can't use other seps ":"
+        label: str = None, # If None, asset_id
         mps_base: str = "https://mps-qa.lib.harvard.edu/assets/images/AT:",
-        service: str = None,
+        service: str = None, # Eg /full/max/0/default.jpg
         format: str = None,
         metadata: list = None
     ):
@@ -36,7 +36,7 @@ class IIIFCanvas:
         asset_id = asset_id or path_filename #check to see if this works correctly
         asset_str = f"{asset_app_prefix}{asset_id}"
         if(add_uuid):
-            asset_str += f":{shortuuid.uuid()}"
+            asset_str += f"{shortuuid.uuid()}"
         self.asset_id = asset_str
         self.label = label or self.asset_id
         mps_base = mps_base or "https://mps-qa.lib.harvard.edu/assets/images/AT:"
@@ -59,6 +59,8 @@ class IIIFCanvas:
             metadata = self.metadata
         )
 
+# For consistency, either imageAsset should also be a class, or turn IIIFCanvas into a method which wraps dict properties
+# Currently, generate_manifest expects a list of dicts
 def createImageAsset(
     identifier: str,
     space: str,
@@ -98,7 +100,7 @@ def wrapIngestRequest(
     space_default: str,
     action_default: str = "upsert",
     ) -> dict:
-    """Creates a JSON ingest request to be sent to the LTS MPS ingest API"""
+    """Creates an ingest request to be sent to the LTS MPS ingest API"""
     req = {
         "globalSettings" : {
             "actionDefault": action_default,
@@ -194,7 +196,7 @@ def ingestImages(
             print("image dict")
             print(image_dict)
             canvases.append(image_dict) # pass as dicts, because generate_manifest is currently expecting a list of dicts, not list of IIIFCanvases
-            image["IIIFCanvas"] = image_dict
+            image["IIIFCanvas"] = image_dict # this is a bit messy. Maybe only keep these properties in one place rather than in "images" and "canvases"? Right now all canvases only have 1 image
             print("image")
             print(image)
             
@@ -219,7 +221,7 @@ def ingestImages(
         print(type(manifest))
         print(manifest)
 
-        print("------ test manifest ------")
+        # print("------ test manifest ------")
         # manifest.inspect()
     else:
         manifest = existing_manifest
@@ -279,11 +281,11 @@ def test_ingest_pipeline():
     images = [
         {
             "label": "27.586.126A",
-            "filepath": "./test_images/27.586.126A-cm-2016-02-09.tif",
+            "filepath": "./test_images/mcihtest1.tif",
         },
         {
             "label": "27.586.248A",
-            "filepath": "./test_images/27.586.248A-cm-2016-02-09.tif",
+            "filepath": "./test_images/mcihtest2.tif",
             "metadata": [
                 {
                     "label": "Test",
@@ -293,7 +295,7 @@ def test_ingest_pipeline():
         },
         {
             "label": "27.586.249A",
-            "filepath": "./test_images/27.586.249A-cm-2016-02-09.tif"
+            "filepath": "./test_images/mcihtest3.tif"
         }
     ]
     ingestImages(
@@ -355,7 +357,7 @@ def test_ingest_pipeline():
         space_default="atdarth",
         endpoint="https://mps-admin-qa.lib.harvard.edu/admin/ingest/initialize",
         environment="qa",
-        asset_app_prefix="MCIH:"
+        asset_app_prefix="MCIH"
     )
 
 if __name__ == '__main__':
