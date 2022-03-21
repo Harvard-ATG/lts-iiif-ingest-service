@@ -4,12 +4,13 @@ import requests
 import boto3
 import bucket
 import generate_manifest
-import iiif_jwt
 import os
 import shortuuid
 import mimetypes
 import json
 from PIL import Image
+from iiif_jwt import Credentials
+from settings import ROOT_DIR
 
 class IIIFCanvas:
     def __init__(
@@ -135,6 +136,7 @@ def sendIngestRequest(
 def ingestImages(
     image_dicts: list,
     issuer: str, #e.g. "atmch", "atmediamanager", "atomeka", "atdarth"
+    jwt_creds: Credentials, # Credentials class from iiif_jwt
     manifest_level_metadata: dict,
     base_url: str, #e.g. https://nrs-qa.lib.harvard.edu/URN-3:AT:TESTMANIFEST3:MANIFEST:3 - URN-3:{namespace}:{manifestname}:MANIFEST:{PreziVersion}
     bucket_name: str, #find a better way to map all of these related things, eg given an issuer and environment I shouldn't need to remember the bucket
@@ -146,7 +148,7 @@ def ingestImages(
     mps_base: str = None,
     session=None,
     existing_manifest: dict = None,
-    add_uuid = True
+    add_uuid = True,
 ) -> bool:
     """Given an ordered list of dicts with filenames and metadata, upload images to S3,
     create a manifest, create a JWT, and kick off an ingest request"""
@@ -227,17 +229,7 @@ def ingestImages(
         manifest = existing_manifest
 
     # Create token
-    iiif_jwt.load_auth(
-        issuer=issuer,
-        environment=environment
-    )
-    token = iiif_jwt.make_iiif_jwt(
-        os.environ.get("ISSUER"),
-        ["ingest"],
-        os.environ.get("PRIVATE_KEY_PATH"),
-        os.environ.get("KEY_ID")
-    )
-    print(token)
+    token = jwt_creds.make_jwt()
 
     # Create assets for ingest
     assets = []
@@ -277,6 +269,11 @@ def ingestImages(
     return r        
 
 def test_ingest_pipeline():
+    creds = Credentials(
+        issuer="atdarth",
+        kid="atdarthdefault",
+        private_key_path=os.path.join(ROOT_DIR, f"auth/qa/keys/atdarth/atdarthdefault/private.key")
+    )
     
     images = [
         {
@@ -301,6 +298,7 @@ def test_ingest_pipeline():
     ingestImages(
         image_dicts=images,
         issuer="atdarth",
+        jwt_creds = creds,
         manifest_level_metadata=dict(
             labels=[
                 "Test Manifest MCIH"
