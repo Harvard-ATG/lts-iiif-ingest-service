@@ -9,92 +9,145 @@ from settings import ROOT_DIR
 
 logger = logging.getLogger(__name__)
 
-def make_iiif_jwt(
-    issuer: str,
-    resources: list,
-    private_key_path: str,
-    kid: str, 
-    algorithm: str = "RS256",
-    expiration: int = 3600
+class Credentials:
+    def __init__(
+        self,
+        issuer: str = None,
+        kid: str = None,
+        resources: list = ["ingest"],
+        algorithm: str = "RS256",
+        expiration: int = 3600,
+        timezone: str = "America/New_York",
+        private_key_path: str = None,
+        private_key_string: str = None
     ):
-    """
-        Makes a JWT token
-        private_key_path: the secret key provided by LTS for the given issuer
-        issuer: the service which issued the token
-        kid: key ID
-        resources: a list of resource types that the token is allowed to access
-        exp: expiration NumericDate
+        """
+        issuer: the service which issued the token. Example: 'atdarth'
+        private_key_path: path to the secret key provided by LTS for the given issuer
+        private_key: stringified secret key
+        ** either private_key_path or private_key is required. If both are provided, a conflict will be logged and the stringified version will be used**
 
-        Example token data
-        Header
+        kid: key ID. Example: 'atdarthdefault'. A warning is logged if this is not passed, and the pattern f"{issuer}default" used
+        resources: a list of resource types that the token is allowed to access
+        expiration: length of time in seconds for which the token should be valid
+        timezone: defaults to East Coast time
+        algorithm: defaults to RS256
+        """
+        if not issuer:
+            env_issuer = os.environ.get("LTS_IIIF_ISSUER")
+            if env_issuer:
+                logger.info("No issuer passed, using environment variable")
+                self.issuer = env_issuer
+            else:
+                raise ValueError("No parameter passed or environment variable set for `LTS_IIIF_ISSUER`")
+        else:
+            self.issuer = issuer
+
+        if kid:
+            self.kid = kid
+        elif os.environ.get("LTS_IIIF_KID"):
+            logger.info("No `kid` passed, using environment variable")
+            self.kid = os.environ.get("LTS_IIIF_KID")
+        else:
+            self.kid = f"{self.issuer}default"
+            logger.warning(f"No kid set, using {self.issuer}default")
+
+        private_key_path_env = os.environ.get("LTS_IIIF_PRIVATE_KEY_PATH")
+        private_key_string_env = os.environ.get("LTS_IIIF_PRIVATE_KEY_STRING")
+        if (private_key_path_env or private_key_string_env) and (private_key_path or private_key_string):
+            logger.warning("Environment variables present and args set; defaulting to args")
+        if private_key_path and private_key_string:
+            logger.warning("Both `private_key_path` and `private_key_string` set as params. Defaulting to `private_key_string`")
+            self.private_key = private_key_string
+        elif private_key_string:
+            self.private_key = private_key_string
+        elif private_key_path:
+            self.private_key = open(private_key_path, "r").read()
+        elif private_key_string_env:
+            self.private_key = private_key_string_env
+        elif private_key_path_env:
+            self.private_key = open(private_key_path_env, "r").read()
+        else:
+            raise ValueError("No args (`private_key_path` or `private_key_string`) provided. Neither `LTS_IIIF_PRIVATE_KEY_PATH` nor `LTS_IIIF_PRIVATE_KEY_STRING` are set.")
+        
+        valid_resources = ["ingest", "content", "description"]
+        for r in resources:
+            if r not in valid_resources:
+                raise ValueError("Invalid resource type provided")
+        self.resources = resources
+
+        self.algorithm = algorithm
+        self.expiration = expiration
+        self.timezone = timezone
+
+    
+    def make_jwt(
+        self,
+        resources: list = None,
+        algorithm: str = None,
+        expiration: int = None,
+        timezone: str = None
+    ):
+        """
+            Makes a JWT token
+            Example token data
+            Header
+                {
+                    "alg": "RS256",
+                    "typ": "JWT",
+                    "iss": "testissuer",
+                    "kid": "testkeyid",
+                    "resources": [
+                        "description"
+                    ]
+                }
+
+            Payload
             {
-                "alg": "RS256",
-                "typ": "JWT",
-                "iss": "testissuer",
-                "kid": "testkeyid",
-                "resources": [
-                    "description"
-                ]
+                "iat": 1619628554,
+                "exp": 3239257168
             }
 
-        Payload
-        {
-            "iat": 1619628554,
-            "exp": 3239257168
+            Valid algs: RS256, ???
+            Exp range: <8 hours maximum
+
+        """
+        logger.info("Making IIIF LTS jwt")
+        if not resources:
+            resources = self.resources
+        if not algorithm:
+            algorithm = self.algorithm
+        if not expiration:
+            expiration = self.expiration
+        if not timezone:
+            timezone = self.timezone
+        
+        timestamp = datetime.now(ZoneInfo(timezone))
+        header = {
+            "typ": "JWT",
+            "alg": algorithm,
+            "iss": self.issuer,
+            "kid": self.kid,
+            "resources": resources
+        }
+        payload = {
+            "iat": timestamp,
+            "exp": timestamp + timedelta(seconds = expiration)
         }
 
-        Valid algs: RS256, ???
-        Exp range: <8 hours maximum
-
-    """
-    logger.info("Make IIIF LTS jwt")
-    
-    timestamp = datetime.now(ZoneInfo("America/New_York"))
-    header = {
-        "typ": "JWT",
-        "alg": algorithm,
-        "iss": issuer,
-        "kid": kid,
-        "resources": resources
-    }
-    payload = {
-        "iat": timestamp,
-        "exp": timestamp + timedelta(seconds = expiration)
-    }
-
-    private_key = open(private_key_path, "r").read()
-    encoded_jwt = jwt.encode(payload, private_key, algorithm=algorithm, headers=header)
-    return encoded_jwt
-
-def load_auth(issuer: str, environment: str = "qa"):
-    valid_environments = ["qa", "dev", "prod"]
-    valid_apps = ["atmch", "atmediamanager", "atomeka", "atdarth"]
-    try:
-        issuer in valid_apps
-    except ValueError:
-        print("Invalid issuer")
-
-    try:
-        environment in valid_environments
-    except ValueError:
-        print("Invalid environment")
-
-    os.environ['ENVIRONMENT'] = environment
-    os.environ['ISSUER'] = issuer
-    os.environ['KEY_ID'] = f"{issuer}default"
-    os.environ['PUBLIC_KEY_PATH'] = os.path.join(ROOT_DIR, f"auth/{environment}/keys/{issuer}/{issuer}default/public.key")
-    os.environ['PRIVATE_KEY_PATH'] = os.path.join(ROOT_DIR, f"auth/{environment}/keys/{issuer}/{issuer}default/private.key")
-
+        encoded_jwt = jwt.encode(payload, self.private_key, algorithm=algorithm, headers=header)
+        return encoded_jwt
 
 def test():
-    load_auth("atmch", "qa")
-    token = make_iiif_jwt(
-        issuer=os.environ.get("ISSUER"),
-        resources=["ingest"], # ["ingest", "content", "description"],
-        private_key_path=os.environ.get("PRIVATE_KEY_PATH"),
-        kid=os.environ.get("KEY_ID"),
+    creds = Credentials(
+        issuer="atdarth",
+        resources=["ingest"],
+        kid="atdarthdefault",
+        private_key_path=os.path.join(ROOT_DIR, f"auth/qa/keys/atdarth/atdarthdefault/private.key"),
     )
-    print(token)
+    print(creds)
+    jwt = creds.make_jwt()
+    print(jwt)
 
 if __name__ == '__main__':
     test()
