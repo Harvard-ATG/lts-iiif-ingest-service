@@ -345,7 +345,7 @@ def ingestImages(
     if not track_job_status:
         return {
             "tracking": False,
-            "error": False,
+            "job_status": "Unknown - not tracking",
             "ingest_request": r.json(),
             "manifest_url": manifest.id
         }
@@ -358,11 +358,11 @@ def ingestImages(
             print("Dumping response")
             print(r.json())
             return {
-                "error": True,
+                "tracking": True,
                 "completed": False,
-                "message": "Job not found",
                 "ingest_request": r.json(),
-                "manifest_url": manifest.id
+                "manifest_url": manifest.id,
+                "job_status": "Unknown - job not found"
             }
         else:
             status = pingJob(
@@ -375,6 +375,7 @@ def ingestImages(
             if(status.get("completed")):
                 print(f"Manifest {manifest.id} now available")
                 result = {
+                    "tracking": True,
                     "completed": status.get("completed"),
                     "ingest_request": r.json(),
                     "manifest_url": manifest.id,
@@ -386,6 +387,7 @@ def ingestImages(
             else:
                 print("Job failed or did not complete in the allotted timeframe")
                 result = {
+                    "tracking": True,
                     "completed": status.get("completed"),
                     "ingest_request": r.json(),
                     "manifest_url": manifest.id,
