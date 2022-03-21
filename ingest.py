@@ -1,5 +1,6 @@
 from datetime import datetime
 from socket import MsgFlag
+from urllib import request
 from zoneinfo import ZoneInfo
 import requests
 import boto3
@@ -23,8 +24,8 @@ class IIIFCanvas:
         height: int,
         asset_id: str = None, # Alphanumeric only. If None, it is generated. Asset_app_prefix (eg MCIH) + path_filename (eg /test_images/mcihtest1.tif = mcihtest) + uuid if add_uuid, eg AT:MCIHmcihtest1Dj73bjEbHfjwXBoLH5MWgm
         add_uuid: bool = False,
-        asset_app_prefix: str = "", # eg "MCIH" - only alphanumeric, can't use other seps ":"
-        label: str = None, # If None, asset_id
+        asset_app_prefix: str = "", # eg "MCIH" - only alphanumeric, can't use other seps like ":"
+        label: str = None, # If None, it is set to the asset_id
         mps_base: str = "https://mps-qa.lib.harvard.edu/assets/images/AT:",
         service: str = None, # Eg /full/max/0/default.jpg
         format: str = None,
@@ -126,7 +127,7 @@ def sendIngestRequest(
     req: dict,
     endpoint: str,
     token
-):
+) -> request:
     r = requests.post(
         endpoint,
         headers = {
@@ -139,7 +140,7 @@ def sendIngestRequest(
 def jobStatus(
     job_id: str,
     endpoint: str = "https://mps-admin-qa.lib.harvard.edu/admin/ingest/jobstatus/"
-):
+) -> request:
     url = f"{endpoint}{job_id}"
     r = requests.get(
         url
@@ -152,7 +153,7 @@ def pingJob(
     max_pings: int = 25,
     interval: int = 10,
     print_status = True
-):
+) -> dict:
     working = True
     completed = False
     start = time.time()
@@ -224,7 +225,7 @@ def ingestImages(
     print_job_status = False,
     max_job_pings: int = 25,
     job_ping_interval: int = 10,
-) -> bool:
+) -> dict:
     """Given an ordered list of dicts with filenames and metadata, upload images to S3,
     create a manifest, create a JWT, and kick off an ingest request"""
 
@@ -398,7 +399,7 @@ def ingestImages(
                 return result
 
 
-def test_ingest_pipeline():
+def test_ingest_pipeline() -> None:
     # QA environment - DARTH keys and buckets for testing
     darth_qa_session = boto3.Session(profile_name='mps-darth-qa')
 
