@@ -1,4 +1,5 @@
 from datetime import datetime
+from socket import MsgFlag
 from zoneinfo import ZoneInfo
 import requests
 import boto3
@@ -11,6 +12,8 @@ import json
 from PIL import Image
 from iiif_jwt import Credentials
 from settings import ROOT_DIR
+import time
+# import threading
 
 class IIIFCanvas:
     def __init__(
@@ -133,6 +136,73 @@ def sendIngestRequest(
     )
     return r
 
+def jobStatus(
+    job_id: str,
+    endpoint: str = "https://mps-admin-qa.lib.harvard.edu/admin/ingest/jobstatus/"
+):
+    url = f"{endpoint}{job_id}"
+    r = requests.get(
+        url
+    )
+    return r
+
+def pingJob(
+    job_id: str,
+    endpoint: str = "https://mps-admin-qa.lib.harvard.edu/admin/ingest/jobstatus/",
+    max_pings: int = 25,
+    interval: int = 10,
+    print_status = True
+):
+    working = True
+    completed = False
+    start = time.time()
+    pings = 0
+    while working:
+        pings += 1
+        r = jobStatus(job_id, endpoint)
+        status = r.json()
+        end = time.time()
+        msg = ""
+        if(status["data"].get("job_status") == "success"):
+            msg = f"------- Job {job_id} finished ingesting after {round(end - start)} seconds and {pings} pings -------"
+            if(print_status):
+                print(msg)
+                print(status)
+            completed = True
+            working = False
+        elif(status["data"].get("job_status") == "running"):
+            msg = f"-------- Job {job_id} processing. {round(end - start)} seconds and {pings} pings -------"
+            if(print_status):
+                print(msg)
+                print(status)
+            time.sleep(interval)
+        elif(status["data"].get("job_status") == "failed"):
+            msg = f"-------- Job {job_id} Failed. {round(end - start)} seconds and {pings} pings -------"
+            if(print_status):
+                print(msg)
+                print(status)
+            working = False
+        elif(pings > max_pings):
+            msg = f"-------- Job {job_id} did not complete within {round(end - start)} seconds and {pings} pings (max pings {max_pings})"
+            if(print_status):
+                print(status)
+            working=False
+        else:
+            msg = f"-------- Job {job_id} delivered an invalid status. {round(end - start)} seconds and {pings} pings -------"
+            if(print_status):
+                print(status)
+            working = False
+    
+    return {
+        "completed": completed,
+        "message": msg,
+        "job_id": job_id,
+        "endpoint": endpoint,
+        "pings": pings,
+        "elapsed": round(time.time() - start)
+    }
+
+
 def ingestImages(
     image_dicts: list,
     issuer: str, #e.g. "atmch", "atmediamanager", "atomeka", "atdarth"
@@ -149,6 +219,11 @@ def ingestImages(
     session=None,
     existing_manifest: dict = None,
     add_uuid = True,
+    track_job_status = False,
+    job_endpoint: str = "https://mps-admin-qa.lib.harvard.edu/admin/ingest/jobstatus/",
+    print_job_status = False,
+    max_job_pings: int = 25,
+    job_ping_interval: int = 10,
 ) -> bool:
     """Given an ordered list of dicts with filenames and metadata, upload images to S3,
     create a manifest, create a JWT, and kick off an ingest request"""
@@ -168,7 +243,8 @@ def ingestImages(
             image_path=image.get("filepath"),
             bucket_name=bucket_name,
             s3_path=s3_path,
-            session=session)
+            session=session
+        )
         image["s3key"] = s3key
         image["width"] = width
         image["height"] = height
@@ -266,7 +342,59 @@ def ingestImages(
     print(json.dumps(response_dict, indent=4, sort_keys=True))
     
     #what should this return? The job id should be in the response, use that and the endpoint to check on status
-    return r        
+    if not track_job_status:
+        return {
+            "tracking": False,
+            "error": False,
+            "ingest_request": r.json(),
+            "manifest_url": manifest.id
+        }
+    else:
+        #track the job
+        ingest_request = r.json()
+        job_id = ingest_request["data"]["job_tracker_file"].get("_id", None)
+        if not job_id:
+            print("Job not found. Maybe the ingest request failed?")
+            print("Dumping response")
+            print(r.json())
+            return {
+                "error": True,
+                "completed": False,
+                "message": "Job not found",
+                "ingest_request": r.json(),
+                "manifest_url": manifest.id
+            }
+        else:
+            status = pingJob(
+                job_id=job_id,
+                endpoint=job_endpoint,
+                max_pings=max_job_pings,
+                interval=job_ping_interval,
+                print_status=print_job_status
+            )
+            if(status.get("completed")):
+                print(f"Manifest {manifest.id} now available")
+                result = {
+                    "completed": status.get("completed"),
+                    "ingest_request": r.json(),
+                    "manifest_url": manifest.id,
+                    "job_id": job_id,
+                    "job_status": status
+                }
+                print(result)
+                return result
+            else:
+                print("Job failed or did not complete in the allotted timeframe")
+                result = {
+                    "completed": status.get("completed"),
+                    "ingest_request": r.json(),
+                    "manifest_url": manifest.id,
+                    "job_id": job_id,
+                    "job_status": status
+                }
+                print(result)
+                return result
+
 
 def test_ingest_pipeline():
     creds = Credentials(
@@ -355,7 +483,10 @@ def test_ingest_pipeline():
         space_default="atdarth",
         endpoint="https://mps-admin-qa.lib.harvard.edu/admin/ingest/initialize",
         environment="qa",
-        asset_app_prefix="MCIH"
+        asset_app_prefix="MCIH",
+        track_job_status=True,
+        job_endpoint = "https://mps-admin-qa.lib.harvard.edu/admin/ingest/jobstatus/",
+        print_job_status=True
     )
 
 if __name__ == '__main__':
