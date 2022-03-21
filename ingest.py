@@ -399,6 +399,16 @@ def ingestImages(
 
 
 def test_ingest_pipeline():
+    # QA environment - DARTH keys and buckets for testing
+    darth_qa_session = boto3.Session(profile_name='mps-darth-qa')
+
+    # or, pass the keys if named profiles aren't available
+    # darth_qa_session = boto3.Session(
+    #     aws_access_key_id=ACCESS_KEY,
+    #     aws_secret_access_key=SECRET_KEY,
+    ##     aws_session_token=SESSION_TOKEN # only needed if using temporary credentials
+    # )
+
     creds = Credentials(
         issuer="atdarth",
         kid="atdarthdefault",
@@ -428,6 +438,7 @@ def test_ingest_pipeline():
     ingestImages(
         image_dicts=images,
         issuer="atdarth",
+        session = darth_qa_session,
         jwt_creds = creds,
         manifest_level_metadata=dict(
             labels=[
