@@ -2,7 +2,7 @@ import os
 import logging
 import boto3
 from botocore.exceptions import ClientError
-from settings import ROOT_DIR
+from lts_iiif_ingest_service.settings import ROOT_DIR
 import sys, argparse
 from PIL import Image
 
