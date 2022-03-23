@@ -4,7 +4,7 @@ import logging
 from multiprocessing.sharedctypes import Value
 import os
 import jwt
-from lts_iiif_ingest_service.settings import ROOT_DIR
+from IIIFingest.settings import ROOT_DIR
 
 
 logger = logging.getLogger(__name__)

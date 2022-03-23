@@ -4,15 +4,15 @@ from urllib import request
 from zoneinfo import ZoneInfo
 import requests
 import boto3
-from lts_iiif_ingest_service.bucket import upload_image_get_metadata
+from IIIFingest.bucket import upload_image_get_metadata
 import generate_manifest
 import os
 import shortuuid
 import mimetypes
 import json
 from PIL import Image
-from lts_iiif_ingest_service.iiif_jwt import Credentials
-from lts_iiif_ingest_service.settings import ROOT_DIR
+from IIIFingest.iiif_jwt import Credentials
+from IIIFingest.settings import ROOT_DIR
 import time
 # import threading
 
