@@ -419,11 +419,11 @@ def test_ingest_pipeline() -> None:
     images = [
         {
             "label": "27.586.126A",
-            "filepath": "./test_images/mcihtest1.tif",
+            "filepath": "../tests/test_images/mcihtest1.tif",
         },
         {
             "label": "27.586.248A",
-            "filepath": "./test_images/mcihtest2.tif",
+            "filepath": "../tests/test_images/mcihtest2.tif",
             "metadata": [
                 {
                     "label": "Test",
@@ -433,7 +433,7 @@ def test_ingest_pipeline() -> None:
         },
         {
             "label": "27.586.249A",
-            "filepath": "./test_images/mcihtest3.tif"
+            "filepath": "../tests/test_images/mcihtest3.tif"
         }
     ]
     ingestImages(

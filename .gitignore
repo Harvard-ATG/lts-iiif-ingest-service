@@ -1,3 +1,5 @@
 *.env
 auth
 iiif-lts-env
+old
+__pycache__
