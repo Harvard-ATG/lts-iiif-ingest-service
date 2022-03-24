@@ -34,7 +34,6 @@ class IIIFCanvas:
         self.filepath = filepath
         path_root, extension = os.path.splitext(filepath)
         path_filename = os.path.basename(path_root)
-        print(f"IIIFCanvas - {self.filepath} | {path_filename} | {extension}")
         self.width = width
         self.height = height
 
@@ -234,6 +233,7 @@ def ingestImages(
     s3 = session.resource('s3')
     
     # Upload to S3
+    print("Uploading images")
     for image in image_dicts:
         # get the image metadata
         img = Image.open(image.get("filepath"))
@@ -250,11 +250,11 @@ def ingestImages(
         image["width"] = width
         image["height"] = height
         image["format"] = format
-        print(image)
+        print(f"Image uploaded to S3: {image}")
     
     # Create manifest
     if not existing_manifest:
-        print("Creating manifests")
+        print("Creating canvases")
         canvases = []
         for image in image_dicts:
             # Create canvases
@@ -272,12 +272,8 @@ def ingestImages(
                 service = image.get("service", None)
             )
             image_dict = canvas.toDict()
-            print("image dict")
-            print(image_dict)
             canvases.append(image_dict) # pass as dicts, because generate_manifest is currently expecting a list of dicts, not list of IIIFCanvases
             image["IIIFCanvas"] = image_dict # this is a bit messy. Maybe only keep these properties in one place rather than in "images" and "canvases"? Right now all canvases only have 1 image
-            print("image")
-            print(image)
             
         manifest_kwargs=dict(
             base_url = base_url,
@@ -297,7 +293,6 @@ def ingestImages(
         # pass only args which are not None, so we can use the createManifest defaults
         manifest = generate_manifest.createManifest(**{k: v for k, v in manifest_kwargs.items() if v is not None})
         print("------ Manifest ------")
-        print(type(manifest))
         print(manifest)
 
         # print("------ test manifest ------")
@@ -342,6 +337,7 @@ def ingestImages(
         }
         asset = createImageAsset(**{k: v for k, v in params.items() if v is not None})
         assets.append(asset)
+    print("----- Assets: -----")
     print(assets)
     
     #Create request
@@ -352,7 +348,7 @@ def ingestImages(
         space_default=space_default,
         action_default="upsert"
     )
-    print("request_body --------------------")
+    print("----- request_body -----")
     print(request_body)
 
     # Send request
@@ -361,8 +357,7 @@ def ingestImages(
         endpoint = endpoint,
         token = token
     )
-    print("---- r -----")
-    print(r.text)
+    print("---- response -----")
     response_dict = json.loads(r.text)
     print(json.dumps(response_dict, indent=4, sort_keys=True))
     
