@@ -3,3 +3,5 @@ auth
 iiif-lts-env
 old
 __pycache__
+build
+src/IIIFingest.egg-info
