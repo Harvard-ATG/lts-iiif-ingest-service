@@ -312,13 +312,35 @@ def ingestImages(
     assets = []
     for image in image_dicts:
         file_dir, file_name = os.path.split(image.get("filepath"))
-        asset = createImageAsset(
-            identifier = f"{manifest_level_metadata.get('namespace_prefix')}:{image.get('IIIFCanvas').get('asset_id')}",
-            space = image.get("space", space_default),
-            storageSrcPath = s3_path,
-            storageSrcKey = file_name
-            # handle other params later?
-        )
+        #assetMetadata.imageSize is now required by the ingest API
+        assetMetadata = [
+            {
+                "fieldName": "imageSize",
+                "jsonValue": {
+                    "width": image.get('width'),
+                    "height": image.get('height')
+                }
+            }
+        ]
+        assetMetadata.extend(image.get("assetMetadata", [])) # add any image level assetMetadata for ingest
+        # Only pass not None args to use createImageAsset() defaults otherwise
+        params = {
+            "identifier": f"{manifest_level_metadata.get('namespace_prefix')}:{image.get('IIIFCanvas').get('asset_id')}",
+            "space": image.get("space", space_default),
+            "storageSrcPath": s3_path,
+            "storageSrcKey": file_name,
+            "assetMetadata":assetMetadata,
+            "action":image.get("action", None),
+            "createdByAgent": image.get("createdByAgent", None),
+            "lastModifiedByAgent": image.get("lastModifiedByAgent", None),
+            "createDate": image.get("createDate", None),
+            "lastModifiedDate": image.get("lastModifiedDate", None),
+            "status": image.get("status", None),
+            "iiifApiVersion": image.get("iiifApiVersion", None),
+            "policyDefinition": image.get("policyDefinition", None),
+            "assetMetadata": assetMetadata
+        }
+        asset = createImageAsset(**{k: v for k, v in params.items() if v is not None})
         assets.append(asset)
     print(assets)
     
