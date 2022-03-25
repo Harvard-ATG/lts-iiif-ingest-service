@@ -1,10 +1,9 @@
-import os
+import argparse
 import logging
+import os
+
 import boto3
 from botocore.exceptions import ClientError
-from IIIFingest.settings import ROOT_DIR
-import sys, argparse
-from PIL import Image
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +15,7 @@ def upload_image_get_metadata(image_path, bucket_name, s3_path="", session=None)
 
     file_dir, file_name = os.path.split(image_path)
     # make sure s3_path ends in a slash
-    if (s3_path is not None) and (not s3_path.endswith("/")):
+    if s3_path and not s3_path.endswith("/"):
         s3_path += "/"
 
     # extend to handle in-memory later, once we have file upload on an application

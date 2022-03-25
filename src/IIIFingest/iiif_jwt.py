@@ -1,11 +1,11 @@
+import logging
+import os
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
-import logging
-from multiprocessing.sharedctypes import Value
-import os
-import jwt
-from IIIFingest.settings import ROOT_DIR
 
+import jwt
+
+from IIIFingest.settings import ROOT_DIR
 
 logger = logging.getLogger(__name__)
 

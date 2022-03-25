@@ -1,7 +1,8 @@
-from IIIFpres import iiifpapi3
-import os
-import jsonschema
 import json
+import os
+
+import jsonschema
+from IIIFpres import iiifpapi3
 
 iiifpapi3.INVALID_URI_CHARACTERS = iiifpapi3.INVALID_URI_CHARACTERS.replace(":","") # See https://github.com/giacomomarchioro/pyIIIFpres/issues/11
 
@@ -15,7 +16,6 @@ def createManifest(
     service_type: str = "ImageService2", # Image API level - see https://iiif.io/api/presentation/3.0/#service
     service_profile: str = "level2", # Compliance level - see https://iiif.io/api/image/2.1/compliance/ and https://iiif.io/api/image/3.0/compliance/
     # service_id: str = "https://mps-qa.lib.harvard.edu/assets/images/", # Currently set in annotation.id; used for annotation.body.id and service.id; this is MPS rather than NRS; could be hoisted to here
-    namespace_prefix: str = "AT",
     manifest_metadata: list = None,
     rights: str = None,
     required_statement: list = None,
@@ -87,7 +87,7 @@ def createManifest(
     for idx,d in enumerate(canvases):
         idx+=1 
         canvas = manifest.add_canvas_to_items()
-        canvas.set_id(extendbase_url= f"canvas/canvas-{namespace_prefix}:{ d.get('asset_id') }")
+        canvas.set_id(extendbase_url= f"canvas/canvas:{ d.get('asset_id') }")
         canvas.set_height(d["height"])
         canvas.set_width(d["width"])
         if(type(d["label"]) is dict):
@@ -104,9 +104,9 @@ def createManifest(
                 )
 
         annopage = canvas.add_annotationpage_to_items()
-        annopage.set_id(extendbase_url = f"annotationPage/annopage-{namespace_prefix}:{d.get('asset_id')}")
+        annopage.set_id(extendbase_url = f"annotationPage/annopage:{d.get('asset_id')}")
         annotation = annopage.add_annotation_to_items(target=canvas.id) # TODO: think about handling multiple annotations (images) per canvas
-        annotation.set_id(extendbase_url = f"annotation/annotation-{namespace_prefix}:{d.get('asset_id')}")
+        annotation.set_id(extendbase_url = f"annotation/annotation:{d.get('asset_id')}")
         annotation.set_motivation("painting")
         annotation.body.set_id(f"{d.get('id')}{d.get('service')}")
         annotation.body.set_type("Image")
