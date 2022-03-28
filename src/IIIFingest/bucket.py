@@ -7,6 +7,7 @@ from botocore.exceptions import ClientError
 
 logger = logging.getLogger(__name__)
 
+
 def upload_image_get_metadata(image_path, bucket_name, s3_path="", session=None):
     if not session:
         session = boto3._get_default_session()
@@ -20,7 +21,7 @@ def upload_image_get_metadata(image_path, bucket_name, s3_path="", session=None)
 
     # extend to handle in-memory later, once we have file upload on an application
     # https://thecodinginterface.com/blog/aws-s3-python-boto3/
-    # bytes_data = 
+    # bytes_data =
     # obj = s3.Object(bucket_name, f"{s3_path}{file_name}")
     # obj.put(Body=bytes_data)
 
@@ -28,14 +29,12 @@ def upload_image_get_metadata(image_path, bucket_name, s3_path="", session=None)
 
     # try to upload it
     try:
-        bucket.upload_file(
-            Filename=image_path,
-            Key=key
-        )
+        bucket.upload_file(Filename=image_path, Key=key)
         return key
     except ClientError as e:
         logging.error(e)
         return False
+
 
 def upload_directory(path, bucket_name, session=None):
     if not session:
@@ -47,7 +46,7 @@ def upload_directory(path, bucket_name, session=None):
         for file in files:
             full_path = os.path.join(subdir, file)
             with open(full_path, 'rb') as data:
-                bucket.put_object(Key=full_path[len(path)+1:], Body=data)
+                bucket.put_object(Key=full_path[len(path) + 1 :], Body=data)
 
 
 if __name__ == "__main__":
@@ -58,12 +57,14 @@ if __name__ == "__main__":
     parser.add_argument("--s3path", help="Optional S3 path")
     args = parser.parse_args()
 
-    if(not args.bucket):
+    if not args.bucket:
         print("Please set a bucket which you can use in the current AWS session")
 
-    if(args.dir and args.bucket):
+    if args.dir and args.bucket:
         upload_directory(args.dir, args.bucket)
-    
-    if(args.file and args.bucket):
-        response = upload_image_get_metadata(args.file, args.bucket, s3_path=args.s3path)
+
+    if args.file and args.bucket:
+        response = upload_image_get_metadata(
+            args.file, args.bucket, s3_path=args.s3path
+        )
         print(response)

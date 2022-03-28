@@ -1,6 +1,4 @@
-import json
 import logging
-import os
 import time
 from datetime import datetime
 from urllib import request
@@ -18,16 +16,19 @@ def createImageAsset(
     space: str,
     storageSrcPath: str,
     storageSrcKey: str,
-    
     action: str = "create",
     createdByAgent: str = "atagent",
     lastModifiedByAgent: str = "atagent",
-    createDate: str = datetime.now(ZoneInfo("America/New_York")).strftime("%Y-%m-%d %H:%M:%S"),
-    lastModifiedDate: str = datetime.now(ZoneInfo("America/New_York")).strftime("%Y-%m-%d %H:%M:%S"),
+    createDate: str = datetime.now(ZoneInfo("America/New_York")).strftime(
+        "%Y-%m-%d %H:%M:%S"
+    ),
+    lastModifiedDate: str = datetime.now(ZoneInfo("America/New_York")).strftime(
+        "%Y-%m-%d %H:%M:%S"
+    ),
     status: str = "ACTIVE",
     iiifApiVersion: str = "3",
-    policyDefinition: dict = { "policyGroupName": "default"},
-    assetMetadata: list = []
+    policyDefinition: dict = {"policyGroupName": "default"},
+    assetMetadata: list = [],
 ) -> dict:
     return {
         "action": action,
@@ -42,8 +43,9 @@ def createImageAsset(
         "status": status,
         "iiifApiVersion": iiifApiVersion,
         "policyDefinition": policyDefinition,
-        "assetMetadata": assetMetadata
+        "assetMetadata": assetMetadata,
     }
+
 
 def wrapIngestRequest(
     metadata: dict,
@@ -51,48 +53,33 @@ def wrapIngestRequest(
     manifest: dict,
     space_default: str,
     action_default: str = "upsert",
-    ) -> dict:
+) -> dict:
     """Creates an ingest request to be sent to the LTS MPS ingest API"""
     req = {
-        "globalSettings" : {
+        "globalSettings": {
             "actionDefault": action_default,
-            "spaceDefault": space_default
+            "spaceDefault": space_default,
         },
         "metadata": metadata,
-        "assets": {
-            "audio": [],
-            "video": [],
-            "text": [],
-            "image": assets
-        },
-        "manifest": manifest
+        "assets": {"audio": [], "video": [], "text": [], "image": assets},
+        "manifest": manifest,
     }
     return req
 
 
-def sendIngestRequest(
-    req: dict,
-    endpoint: str,
-    token
-) -> request:
-    r = requests.post(
-        endpoint,
-        headers = {
-            "Authorization": f"Bearer {token}"
-        },
-        json=req
-    )
+def sendIngestRequest(req: dict, endpoint: str, token) -> request:
+    r = requests.post(endpoint, headers={"Authorization": f"Bearer {token}"}, json=req)
     return r
+
 
 def jobStatus(
     job_id: str,
-    endpoint: str = "https://mps-admin-qa.lib.harvard.edu/admin/ingest/jobstatus/"
+    endpoint: str = "https://mps-admin-qa.lib.harvard.edu/admin/ingest/jobstatus/",
 ) -> request:
     url = f"{endpoint}{job_id}"
-    r = requests.get(
-        url
-    )
+    r = requests.get(url)
     return r
+
 
 def pingJob(
     job_id: str,
@@ -110,36 +97,36 @@ def pingJob(
         status = r.json()
         end = time.time()
         msg = ""
-        if(status["data"].get("job_status") == "success"):
+        if status["data"].get("job_status") == "success":
             msg = f"------- Job {job_id} finished ingesting after {round(end - start)} seconds and {pings} pings -------"
             logger.debug(msg)
             logger.debug(status)
             completed = True
             working = False
-        elif(status["data"].get("job_status") == "running"):
+        elif status["data"].get("job_status") == "running":
             msg = f"-------- Job {job_id} processing. {round(end - start)} seconds and {pings} pings -------"
             logger.debug(msg)
             logger.debug(status)
             time.sleep(interval)
-        elif(status["data"].get("job_status") == "failed"):
+        elif status["data"].get("job_status") == "failed":
             msg = f"-------- Job {job_id} Failed. {round(end - start)} seconds and {pings} pings -------"
             logger.debug(msg)
             logger.debug(status)
             working = False
-        elif(pings > max_pings):
+        elif pings > max_pings:
             msg = f"-------- Job {job_id} did not complete within {round(end - start)} seconds and {pings} pings (max pings {max_pings})"
             logger.debug(status)
-            working=False
+            working = False
         else:
             msg = f"-------- Job {job_id} delivered an invalid status. {round(end - start)} seconds and {pings} pings -------"
             logger.debug(status)
             working = False
-    
+
     return {
         "completed": completed,
         "message": msg,
         "job_id": job_id,
         "endpoint": endpoint,
         "pings": pings,
-        "elapsed": round(time.time() - start)
+        "elapsed": round(time.time() - start),
     }

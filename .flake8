@@ -1,0 +1,9 @@
+[flake8]
+# enable checks for complexity (C), errors (E), warnings (W), and pyflakes (F)
+select = C,E,F,W
+exclude = .git,__pycache__,doc/,docs/,build/,dist/,archive/
+extend-ignore =
+    # ignore E203 "Whitespace before ':'" errors in flake8 due to black
+    E203
+    # ignore E501 "Line too long" errors in flake8; use black or personal judgement for those
+    E501

@@ -5,35 +5,26 @@ from typing import List, Optional
 
 import shortuuid
 
-from .asset import Asset, create_asset_id, get_filename_noext
+from .asset import Asset, create_asset_id
 from .generate_manifest import createManifest
-from .ingest import (createImageAsset, pingJob, sendIngestRequest,
-                     wrapIngestRequest)
+from .ingest import createImageAsset, pingJob, sendIngestRequest, wrapIngestRequest
+from .settings import (
+    MPS_ASSET_BASE_URL,
+    MPS_BUCKET_NAME,
+    MPS_INGEST_ENDPOINT,
+    MPS_JOBSTATUS_ENDPOINT,
+    MPS_MANIFEST_BASE_URL,
+    VALID_ENVIRONMENTS,
+)
 
 logger = logging.getLogger(__name__)
-
-# MPS environments
-VALID_ENVIRONMENTS = ("dev", "qa", "prod")
-
-# MPS Bucket used by ingest process
-MPS_BUCKET_NAME = "edu.harvard.huit.lts.mps.{account}-{space}-{environment}"
-
-# MPS API endpoints
-MPS_INGEST_ENDPOINT = "https://mps-admin-{environment}.lib.harvard.edu/admin/ingest/initialize"
-MPS_JOBSTATUS_ENDPOINT = "https://mps-admin-{environment}.lib.harvard.edu/admin/ingest/jobstatus/"
-
-# Base URL for images
-MPS_ASSET_BASE_URL = "https://mps-{environment}.lib.harvard.edu/assets/images/{namespace}:"
-
-# Base URL for manifests
-# The format should be URN-3:{namespace}:{manifest_name}:MANIFEST:{PreziVersion}
-MPS_MANIFEST_BASE_URL = "https://nrs-{environment}.lib.harvard.edu/URN-3:{namespace}:"
 
 
 class Client:
     """
     Constructs the ingest API client.
     """
+
     def __init__(
         self,
         account: str = "at",
@@ -42,13 +33,11 @@ class Client:
         asset_prefix: str = "",
         agent: str = "atagent",
         environment: str = "qa",
-        jwt_creds = None,
-        boto_session = None,
+        jwt_creds=None,
+        boto_session=None,
     ):
         if not namespace or not namespace.isalnum():
-            raise ValueError(
-                f"Invalid or missing namespace_prefix"
-            )
+            raise ValueError("Invalid or missing namespace_prefix")
         if environment not in VALID_ENVIRONMENTS:
             raise ValueError(
                 f"Invalid environment: {environment} must be one of: {VALID_ENVIRONMENTS}"
@@ -65,18 +54,24 @@ class Client:
         self.jwt_creds = jwt_creds
         self.boto_session = boto_session
 
-        self.bucket_name = MPS_BUCKET_NAME.format(account=account, space=space, environment=environment)
-        self.asset_base_url = MPS_ASSET_BASE_URL.format(environment=environment, namespace=namespace)
-        self.manifest_base_url = MPS_MANIFEST_BASE_URL.format(environment=environment, namespace=namespace)
+        self.bucket_name = MPS_BUCKET_NAME.format(
+            account=account, space=space, environment=environment
+        )
+        self.asset_base_url = MPS_ASSET_BASE_URL.format(
+            environment=environment, namespace=namespace
+        )
+        self.manifest_base_url = MPS_MANIFEST_BASE_URL.format(
+            environment=environment, namespace=namespace
+        )
         self.ingest_endpoint = MPS_INGEST_ENDPOINT.format(environment=environment)
         self.job_endpoint = MPS_JOBSTATUS_ENDPOINT.format(environment=environment)
 
-    def _get_asset_url(self, asset_id:str) -> str:
-        """ Constructs the asset URL. """
+    def _get_asset_url(self, asset_id: str) -> str:
+        """Constructs the asset URL."""
         return f"{self.asset_base_url}{asset_id}"
 
-    def _get_manifest_url(self, manifest_name:str, prezi_version:int = 3) -> str:
-        """ Constructs the manifest URL. """
+    def _get_manifest_url(self, manifest_name: str, prezi_version: int = 3) -> str:
+        """Constructs the manifest URL."""
         return f"{self.manifest_base_url}{manifest_name}:MANIFEST:{prezi_version}"
 
     def upload(self, images: List[dict], s3_path: str = "") -> List[Asset]:
@@ -88,10 +83,13 @@ class Client:
         assets = []
         for image in images:
             filepath = image["filepath"]
-            name = image.get("name", get_filename_noext(filepath)) or ""
-            image_id = image.get("id", "") or ""
-            asset_id = create_asset_id(asset_prefix=self.asset_prefix, identifier=image_id)
-            asset = Asset.from_file(filepath, asset_id=asset_id, label=name)
+            asset_id = create_asset_id(
+                asset_prefix=self.asset_prefix,
+                identifier=image.get("id"),
+            )
+            asset = Asset.from_file(
+                filepath, asset_id=asset_id, label=image.get("name")
+            )
             asset.upload(
                 bucket_name=self.bucket_name,
                 s3_path=s3_path,
@@ -113,7 +111,7 @@ class Client:
         Returns the created manifest as a dict.
         """
         if not manifest_name:
-            manifest_name = f"TEST{shortuuid.uuid()}"
+            manifest_name = shortuuid.uuid()
 
         canvases = []
         for asset in assets:
@@ -124,7 +122,9 @@ class Client:
 
         logger.debug(f"Creating manifest from data: {manifest_level_metadata}")
         manifest_kwargs = dict(
-            base_url=self._get_manifest_url(manifest_name=manifest_name, prezi_version=prezi_version),
+            base_url=self._get_manifest_url(
+                manifest_name=manifest_name, prezi_version=prezi_version
+            ),
             canvases=canvases,
             labels=manifest_level_metadata.get("labels", None),
             behaviors=manifest_level_metadata.get("behaviors", None),
@@ -132,9 +132,15 @@ class Client:
             rights=manifest_level_metadata.get("rights", None),
             required_statement=manifest_level_metadata.get("required_statement", None),
             manifest_metadata=manifest_level_metadata.get("metadata", None),
-            default_lang=manifest_level_metadata.get("default_lang", None),  # need to add this?
-            service_type=manifest_level_metadata.get("service_type", None),  # need to add this ?
-            service_profile=manifest_level_metadata.get("service_profile", None),  # need to add this
+            default_lang=manifest_level_metadata.get(
+                "default_lang", None
+            ),  # need to add this?
+            service_type=manifest_level_metadata.get(
+                "service_type", None
+            ),  # need to add this ?
+            service_profile=manifest_level_metadata.get(
+                "service_profile", None
+            ),  # need to add this
         )
         manifest = createManifest(
             **{k: v for k, v in manifest_kwargs.items() if v is not None}
@@ -206,7 +212,9 @@ class Client:
         )
         response_data = response.json()
 
-        job_id = response_data.get("data", {}).get("job_tracker_file", {}).get("_id", "")
+        job_id = (
+            response_data.get("data", {}).get("job_tracker_file", {}).get("_id", "")
+        )
         if not job_id:
             logger.warning("Ingest job ID not found. Maybe the ingest request failed?")
         else:
@@ -231,12 +239,14 @@ class Client:
         logger.info(f"Job status: {status}")
 
         if status.get("completed"):
-            logger.debug(f"Job completed.")
+            logger.debug("Job completed.")
         else:
             logger.debug("Job failed or did not complete in the allotted timeframe")
 
         return status
 
     def __repr__(self):
-        return (f'{self.__class__.__name__}('
-           f'{self.account!r}, {self.space!r}, {self.namespace!r}, {self.agent!r}, {self.asset_prefix!r})')
+        return (
+            f'{self.__class__.__name__}('
+            f'{self.account!r}, {self.space!r}, {self.namespace!r}, {self.agent!r}, {self.asset_prefix!r})'
+        )

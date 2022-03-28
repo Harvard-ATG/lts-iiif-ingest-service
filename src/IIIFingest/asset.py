@@ -43,7 +43,9 @@ class Asset:
         metadata=None,
     ):
         if asset_id and not asset_id.isalnum():
-            raise ValueError(f"Invalid asset_id: must be alphanumeric only.")
+            raise ValueError(
+                f"Invalid asset_id {asset_id} - must be alphanumeric only."
+            )
         self.asset_id = asset_id
         self.filepath = filepath
         self.s3key = s3key
@@ -117,4 +119,4 @@ class Asset:
         }
 
     def __str__(self):
-        return f"Asset: " + str(sorted(self.to_dict().items()))
+        return "Asset: " + str(sorted(self.to_dict().items()))

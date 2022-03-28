@@ -5,9 +5,10 @@ from zoneinfo import ZoneInfo
 
 import jwt
 
-from IIIFingest.settings import ROOT_DIR
+from .settings import ROOT_DIR
 
 logger = logging.getLogger(__name__)
+
 
 class Credentials:
     def __init__(
@@ -19,7 +20,7 @@ class Credentials:
         expiration: int = 3600,
         timezone: str = "America/New_York",
         private_key_path: str = None,
-        private_key_string: str = None
+        private_key_string: str = None,
     ):
         """
         issuer: the service which issued the token. Example: 'atdarth'
@@ -39,7 +40,9 @@ class Credentials:
                 logger.info("No issuer passed, using environment variable")
                 self.issuer = env_issuer
             else:
-                raise ValueError("No parameter passed or environment variable set for `LTS_IIIF_ISSUER`")
+                raise ValueError(
+                    "No parameter passed or environment variable set for `LTS_IIIF_ISSUER`"
+                )
         else:
             self.issuer = issuer
 
@@ -54,10 +57,16 @@ class Credentials:
 
         private_key_path_env = os.environ.get("LTS_IIIF_PRIVATE_KEY_PATH")
         private_key_string_env = os.environ.get("LTS_IIIF_PRIVATE_KEY_STRING")
-        if (private_key_path_env or private_key_string_env) and (private_key_path or private_key_string):
-            logger.warning("Environment variables present and args set; defaulting to args")
+        if (private_key_path_env or private_key_string_env) and (
+            private_key_path or private_key_string
+        ):
+            logger.warning(
+                "Environment variables present and args set; defaulting to args"
+            )
         if private_key_path and private_key_string:
-            logger.warning("Both `private_key_path` and `private_key_string` set as params. Defaulting to `private_key_string`")
+            logger.warning(
+                "Both `private_key_path` and `private_key_string` set as params. Defaulting to `private_key_string`"
+            )
             self.private_key = private_key_string
         elif private_key_string:
             self.private_key = private_key_string
@@ -68,8 +77,10 @@ class Credentials:
         elif private_key_path_env:
             self.private_key = open(private_key_path_env, "r").read()
         else:
-            raise ValueError("No args (`private_key_path` or `private_key_string`) provided. Neither `LTS_IIIF_PRIVATE_KEY_PATH` nor `LTS_IIIF_PRIVATE_KEY_STRING` are set.")
-        
+            raise ValueError(
+                "No args (`private_key_path` or `private_key_string`) provided. Neither `LTS_IIIF_PRIVATE_KEY_PATH` nor `LTS_IIIF_PRIVATE_KEY_STRING` are set."
+            )
+
         valid_resources = ["ingest", "content", "description"]
         for r in resources:
             if r not in valid_resources:
@@ -80,36 +91,35 @@ class Credentials:
         self.expiration = expiration
         self.timezone = timezone
 
-    
     def make_jwt(
         self,
         resources: list = None,
         algorithm: str = None,
         expiration: int = None,
-        timezone: str = None
+        timezone: str = None,
     ):
         """
-            Makes a JWT token
-            Example token data
-            Header
-                {
-                    "alg": "RS256",
-                    "typ": "JWT",
-                    "iss": "testissuer",
-                    "kid": "testkeyid",
-                    "resources": [
-                        "description"
-                    ]
-                }
-
-            Payload
+        Makes a JWT token
+        Example token data
+        Header
             {
-                "iat": 1619628554,
-                "exp": 3239257168
+                "alg": "RS256",
+                "typ": "JWT",
+                "iss": "testissuer",
+                "kid": "testkeyid",
+                "resources": [
+                    "description"
+                ]
             }
 
-            Valid algs: RS256, ???
-            Exp range: <8 hours maximum
+        Payload
+        {
+            "iat": 1619628554,
+            "exp": 3239257168
+        }
+
+        Valid algs: RS256, ???
+        Exp range: <8 hours maximum
 
         """
         logger.info("Making IIIF LTS jwt")
@@ -121,33 +131,36 @@ class Credentials:
             expiration = self.expiration
         if not timezone:
             timezone = self.timezone
-        
+
         timestamp = datetime.now(ZoneInfo(timezone))
         header = {
             "typ": "JWT",
             "alg": algorithm,
             "iss": self.issuer,
             "kid": self.kid,
-            "resources": resources
+            "resources": resources,
         }
-        payload = {
-            "iat": timestamp,
-            "exp": timestamp + timedelta(seconds = expiration)
-        }
+        payload = {"iat": timestamp, "exp": timestamp + timedelta(seconds=expiration)}
 
-        encoded_jwt = jwt.encode(payload, self.private_key, algorithm=algorithm, headers=header)
+        encoded_jwt = jwt.encode(
+            payload, self.private_key, algorithm=algorithm, headers=header
+        )
         return encoded_jwt
+
 
 def test():
     creds = Credentials(
         issuer="atdarth",
         resources=["ingest"],
         kid="atdarthdefault",
-        private_key_path=os.path.join(ROOT_DIR, f"auth/qa/keys/atdarth/atdarthdefault/private.key"),
+        private_key_path=os.path.join(
+            ROOT_DIR, "auth/qa/keys/atdarth/atdarthdefault/private.key"
+        ),
     )
     print(creds)
     jwt = creds.make_jwt()
     print(jwt)
+
 
 if __name__ == '__main__':
     test()
