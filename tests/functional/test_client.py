@@ -1,7 +1,8 @@
-import sys
-import os
-import boto3
 import logging
+import os
+import sys
+
+import boto3
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.join(ROOT_DIR, 'src'))
@@ -47,22 +48,22 @@ client = Client(
 images = [
     {
         "label": "27.586.126A",
-        "filepath": os.path.join(ROOT_DIR, "src/tests/test_images/mcihtest1.tif"),
+        "filepath": os.path.join(ROOT_DIR, "src/tests/images/mcihtest1.tif"),
     },
-    # {
-    #     "label": "27.586.248A",
-    #     "filepath": os.path.join(ROOT_DIR, "src/tests/test_images/mcihtest2.tif"),
-    #     "metadata": [
-    #         {
-    #             "label": "Test",
-    #             "value": "Image level metadata"
-    #         }
-    #     ]
-    # },
-    # {
-    #     "label": "27.586.249A",
-    #     "filepath": os.path.join(ROOT_DIR, "src/tests/test_images/mcihtest3.tif"),
-    # }
+    {
+        "label": "27.586.248A",
+        "filepath": os.path.join(ROOT_DIR, "src/tests/images/mcihtest2.tif"),
+        "metadata": [
+            {
+                "label": "Test",
+                "value": "Image level metadata"
+            }
+        ]
+    },
+    {
+        "label": "27.586.249A",
+        "filepath": os.path.join(ROOT_DIR, "src/tests/images/mcihtest3.tif"),
+    }
 ]
 
 manifest_level_metadata={
@@ -118,7 +119,7 @@ manifest_level_metadata={
 assets = client.upload(images=images, s3_path="images/")
 
 manifest = client.create_manifest(
-    manifest_level_metadata=manifest_level_metadata, 
+    manifest_level_metadata=manifest_level_metadata,
     assets=assets,
 )
 

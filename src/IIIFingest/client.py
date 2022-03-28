@@ -31,11 +31,8 @@ MPS_MANIFEST_BASE_URL = "https://nrs-{environment}.lib.harvard.edu/URN-3:{namesp
 
 
 class Client:
-    """Constructs the ingest API client.
-
-    Usage:
-        >>> from IIIFIngest.client import Client
-        >>> client = Client()
+    """
+    Constructs the ingest API client.
     """
     def __init__(
         self,
@@ -74,10 +71,12 @@ class Client:
         self.ingest_endpoint = MPS_INGEST_ENDPOINT.format(environment=environment)
         self.job_endpoint = MPS_JOBSTATUS_ENDPOINT.format(environment=environment)
 
-    def _get_asset_base_url(self, asset_id:str):
+    def _get_asset_url(self, asset_id:str) -> str:
+        """ Constructs the asset URL. """
         return f"{self.asset_base_url}{asset_id}"
 
-    def _get_manifest_base_url(self, manifest_name:str, prezi_version:int = 3):
+    def _get_manifest_url(self, manifest_name:str, prezi_version:int = 3) -> str:
+        """ Constructs the manifest URL. """
         return f"{self.manifest_base_url}{manifest_name}:MANIFEST:{prezi_version}"
 
     def upload(self, images: List[dict], s3_path: str = "") -> List[Asset]:
@@ -119,13 +118,13 @@ class Client:
         canvases = []
         for asset in assets:
             canvas = asset.to_dict()
-            canvas["id"] = self._get_asset_base_url(asset.asset_id)
+            canvas["id"] = self._get_asset_url(asset.asset_id)
             canvas["service"] = f"/full/max/0/default{asset.extension}"
             canvases.append(canvas)
 
         logger.debug(f"Creating manifest from data: {manifest_level_metadata}")
         manifest_kwargs = dict(
-            base_url=self._get_manifest_base_url(manifest_name=manifest_name, prezi_version=prezi_version),
+            base_url=self._get_manifest_url(manifest_name=manifest_name, prezi_version=prezi_version),
             canvases=canvases,
             labels=manifest_level_metadata.get("labels", None),
             behaviors=manifest_level_metadata.get("behaviors", None),
