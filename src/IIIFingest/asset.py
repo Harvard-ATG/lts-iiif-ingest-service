@@ -30,6 +30,10 @@ def create_asset_id(
 
 
 class Asset:
+    """
+    Constructs an Asset to be ingested.
+    """
+
     def __init__(
         self,
         asset_id=None,
@@ -57,18 +61,24 @@ class Asset:
         self.metadata = metadata if metadata else {}
 
     def upload(
-        self, bucket_name: str = "", s3_path: Optional[str] = None, session=None
-    ):
+        self, bucket_name: str = "", s3_path: Optional[str] = None, boto_session=None
+    ) -> str:
+        """
+        Uploads the asset to the designated bucket.
+        """
         self.s3key = upload_image_get_metadata(
             image_path=self.filepath,
             bucket_name=bucket_name,
             s3_path=s3_path,
-            session=session,
+            session=boto_session,
         )
         return self.s3key
 
     @classmethod
     def from_file(cls, filepath, **kwargs):
+        """
+        Constructs an Asset from a file.
+        """
         asset_id = kwargs.get("asset_id")
 
         if kwargs.get("width") and kwargs.get("height"):
@@ -106,6 +116,9 @@ class Asset:
         )
 
     def to_dict(self):
+        """
+        Returns a dict representation of the Asset.
+        """
         return {
             "asset_id": self.asset_id,
             "filepath": self.filepath,

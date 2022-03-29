@@ -93,7 +93,7 @@ class Client:
             asset.upload(
                 bucket_name=self.bucket_name,
                 s3_path=s3_path,
-                session=self.boto_session,
+                boto_session=self.boto_session,
             )
             assets.append(asset)
         logger.debug(f"Upload completed. Returning assets: {assets}")
@@ -111,7 +111,7 @@ class Client:
         Returns the created manifest as a dict.
         """
         if not manifest_name:
-            manifest_name = shortuuid.uuid()
+            manifest_name = f"GEN{shortuuid.uuid()}"
 
         canvases = []
         for asset in assets:
