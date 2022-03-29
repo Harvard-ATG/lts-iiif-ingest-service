@@ -2,6 +2,9 @@
 auth
 iiif-lts-env
 old
+.idea
+.vscode
 __pycache__
 build
 src/IIIFingest.egg-info
+venv

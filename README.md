@@ -1,9 +1,92 @@
 # IIIF LTS Library
 This will be a Python library to interact with the LTS media ingest solution. Functionality to include JWT token generation, interacting with buckets, etc.
 
-## Resources
+## Getting Started
+
+### Installation
+
+```
+pip install git+https://github.com/Harvard-ATG/lts-iiif-ingest-service.git
+```
+
+### Using the library
+
+```python
+from IIIFingest.auth import Credentials
+from IIIFingest.client import Client
+
+# Configure ingest API auth credentials
+jwt_creds = Credentials(
+    issuer="atissuer",
+    kid="atissuerdefault",
+    private_key_path="path/to/private.key"
+)
+
+# Configure ingest API client 
+client = Client(
+    space="atspace",      # space registered to an MPS account
+    namespace="at",       # NRS namespace for assets and manifests
+    environment="qa",     # must be on VPN for non-prod (or whitelisted)
+    asset_prefix="myapp", # used with asset IDs
+    jwt_creds=jwt_creds,
+    boto_session=None,
+)
+
+# Call client methods as needed
+assets = client.upload(...) 
+manifest = client.create_manifest(...)
+result = client.ingest(...)
+status = client.jobstatus(...)
+```
+
+## Documentation & References 
+
+See the following Media Presentation Service (MPS) documentation for more details:
+
 - [Authentication & Authorization](https://docs.google.com/document/d/1qKHD--VUCWH4aEXUv7E3jEf0AnLDgNyhMpSLqCqnLbY/edit#heading=h.uuca9t2f0d35)
 - [Ingest API](https://docs.google.com/document/d/1seTnNx8Unwl4w4n39rdUKESuxU1IWMlpLjpZMVbsA1U/edit#heading=h.ru4gjiray64u)
+
+## Development
+
+### Getting setup
+
+**Clone repo:**
+
+```
+$ git clone git@github.com:Harvard-ATG/lts-iiif-ingest-service.git
+$ cd lts-iiif-ingest-service
+```
+
+**Setup python environment:**
+
+```
+$ python3 -m venv venv
+$ source venv/bin/activate
+$ pip install -r requirements.txt
+```
+
+**Install pre-commit hooks:**
+
+This installs [pre-commit git hooks](https://pre-commit.com/) to automatically lint and format code before committing. See the `.pre-commit-config.yaml` for specifics.
+
+```
+$ pre-commit install
+```
+
+### Testing
+
+To run an end-to-end test:
+
+```
+$ python3 tests/test_client.py -i atmediamanager -s atmediamanager -e qa --asset-prefix mcih
+```
+
+To run unit tests:
+
+```
+$ python3 -m unittest discover -s ./tests
+```
+
 
 ## Auth
 Currently store tokens in /auth which is ignored. Think about better ways to handle this.
