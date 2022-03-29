@@ -1,5 +1,5 @@
 # IIIF LTS Library
-This will be a Python library to interact with the LTS media ingest solution. Functionality to include JWT token generation, interacting with buckets, etc.
+This is a Python library which facilitates interacting with the Harvard LTS (Library Technology Services) media ingest solution, which takes images and metadata and serves them via [IIIF](https://iiif.io/) at scale. `IIIFingest` helps other applications manage ingest credentials, upload images to S3 for ingest, create IIIF manifests, create asset ingest requests, generate JWT tokens for signing ingest requests, and track the status of ingest jobs.
 
 ## Getting Started
 
@@ -7,6 +7,11 @@ This will be a Python library to interact with the LTS media ingest solution. Fu
 
 ```
 pip install git+https://github.com/Harvard-ATG/lts-iiif-ingest-service.git
+```
+or
+
+```
+pip install IIIFingest
 ```
 
 ### Using the library
@@ -64,6 +69,8 @@ $ python3 -m venv venv
 $ source venv/bin/activate
 $ pip install -r requirements.txt
 ```
+Optionally, to run linting / precommit hooks:
+`$ pip install -r requirements-dev.txt`
 
 **Install pre-commit hooks:**
 
@@ -89,8 +96,8 @@ $ python3 -m unittest discover -s ./tests
 
 
 ## Auth
-Currently store tokens in /auth which is ignored. Think about better ways to handle this.
-File hierarchy: 
+For local development, you can store tokens in /auth which is ignored (). For production environments, use environment variables injected via SSM or other secret management techniques. You can pass either `private_key_path` (e.g. to one of the `private.key`s below) or `private_key_string` (stringified environment variable) to a `Credentials` class instance; `Client` takes a `boto3` session.
+### File hierarchy: 
 - auth
     - dev
         - issuers
@@ -117,7 +124,7 @@ File hierarchy:
 
 
 ## Examples and notes
-- Upload a file: `python3 bucket.py --file=/Users/colecrawford/Github/lts-iiif-ingest-service/test_images/27.586.1-cm-2016-02-09.tif --bucket=edu.harvard.huit.lts.mps.at-atdarth-dev`
+- Upload a file: `python3 bucket.py --file=/Users/colecrawford/Github/lts-iiif-ingest-service/tests/images/27.586.1-cm-2016-02-09.tif --bucket=edu.harvard.huit.lts.mps.at-atdarth-dev`
 - Check it was uploaded: `aws s3 ls edu.harvard.huit.lts.mps.at-atdarth-dev` or `aws s3 ls s3://edu.harvard.huit.lts.mps.at-atdarth-dev --recursive --human-readable --summarize`
 - Generate a JWT token: `python3 iiif_jwt.py`
 - QA MPS endpoint: `https://mps-admin-qa.lib.harvard.edu/admin/ingest/initialize`
