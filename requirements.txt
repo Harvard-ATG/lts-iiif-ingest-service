@@ -5,4 +5,4 @@ boto3==1.21.9
 Pillow==9.0.1
 requests==2.27.1
 shortuuid==1.0.8
-git+https://github.com/giacomomarchioro/pyIIIFpres
+pyIIIFpres==0.1.1
