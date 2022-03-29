@@ -1,0 +1,12 @@
+[build-system]
+requires = ["setuptools>=42"]
+build-backend = "setuptools.build_meta"
+
+[tool.black]
+# will not convert single-quote strings to double-quote
+skip-string-normalization = true
+
+[tool.isort]
+# play nice with black formatter
+# see https://pycqa.github.io/isort/docs/configuration/black_compatibility.html
+profile = "black"
