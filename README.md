@@ -8,7 +8,7 @@ This is a Python library which facilitates interacting with the Harvard LTS (Lib
 ```
 pip install git+https://github.com/Harvard-ATG/lts-iiif-ingest-service.git
 ```
-or
+or, via `pip` ([PyPi page](https://pypi.org/project/IIIFingest)):
 
 ```
 pip install IIIFingest
@@ -94,6 +94,14 @@ To run unit tests:
 $ python3 -m unittest discover -s ./tests
 ```
 
+### PyPi release
+```
+$ pip install twine
+$ python setup.py sdist bdist_wheel
+$ tar tzf dist IIIFingest-VERSION-.tar.gz
+$ twine check dist/*
+$ twine upload dist/IIIFingest-VERSION*
+```
 
 ## Auth
 For local development, you can store tokens in /auth which is ignored (). For production environments, use environment variables injected via SSM or other secret management techniques. You can pass either `private_key_path` (e.g. to one of the `private.key`s below) or `private_key_string` (stringified environment variable) to a `Credentials` class instance; `Client` takes a `boto3` session.
