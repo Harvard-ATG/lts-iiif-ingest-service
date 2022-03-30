@@ -103,7 +103,7 @@ The `Client` constructor may be configured with the following options:
 Notes:
 - LTS will provide the `account`, `space`, `namespace`, and `agent` values.
 - LTS will provide the AWS credentials needed to upload images to S3. It's up to you how S3 credentials are managed, the only requirement is that a boto [session](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/session.html) is provided to the library.
-- To make requests to non-prod environments (`dev` or `qa), the client must be on VPN or the IP must be whitelisted. If the requests are coming from a cloud account, make sure to whitelist the IP range.
+- To make requests to non-prod environments (`dev` or `qa`), the client must be on VPN or the IP must be whitelisted. If the requests are coming from a cloud account, make sure to whitelist the IP range.
 
 ### Documentation & References
 
