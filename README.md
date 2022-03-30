@@ -1,24 +1,38 @@
 # IIIF LTS Library
+
 This is a Python library which facilitates interacting with the Harvard LTS (Library Technology Services) media ingest solution, which takes images and metadata and serves them via [IIIF](https://iiif.io/) at scale. `IIIFingest` helps other applications manage ingest credentials, upload images to S3 for ingest, create IIIF manifests, create asset ingest requests, generate JWT tokens for signing ingest requests, and track the status of ingest jobs.
 
 ## Getting Started
 
 ### Installation
 
-```
-pip install git+https://github.com/Harvard-ATG/lts-iiif-ingest-service.git
-```
-or, via `pip` ([PyPi page](https://pypi.org/project/IIIFingest)):
+To install via [pypi.org](https://pypi.org/project/IIIFingest):
 
 ```
 pip install IIIFingest
 ```
 
+Or from source:
+
+```
+pip install git+https://github.com/Harvard-ATG/lts-iiif-ingest-service.git
+```
+
+### Requirements
+
+- Python 3.7+
+
 ### Using the library
 
 ```python
+import boto3
+import logging
 from IIIFingest.auth import Credentials
 from IIIFingest.client import Client
+
+# Enable debug logging
+logging.basicConfig()
+logging.getLogger('IIIFingest').setLevel(logging.DEBUG)
 
 # Configure ingest API auth credentials
 jwt_creds = Credentials(
@@ -27,26 +41,73 @@ jwt_creds = Credentials(
     private_key_path="path/to/private.key"
 )
 
-# Configure ingest API client 
+# Configure ingest API client
 client = Client(
-    space="atspace",      # space registered to an MPS account
-    namespace="at",       # NRS namespace for assets and manifests
-    environment="qa",     # must be on VPN for non-prod (or whitelisted)
-    asset_prefix="myapp", # used with asset IDs
+    account="ataccount",
+    space="atspace",
+    namespace="at",
+    environment="qa",
+    asset_prefix="myapp",
     jwt_creds=jwt_creds,
-    boto_session=None,
+    boto_session=boto3.Session(),
 )
 
+# Define images to ingest
+images = [{
+    "label": "Test Image", 
+    "filepath": "tests/images/mcihtest1.tif"
+}]
+
+# Define manifest-level metadata
+manifest_level_metadata = {
+    "labels": ["Test Manifest"],
+    "summary": "A test manifest for ingest",
+    "rights": "http://creativecommons.org/licenses/by-sa/3.0/",
+}
+
 # Call client methods as needed
-assets = client.upload(...) 
-manifest = client.create_manifest(...)
-result = client.ingest(...)
-status = client.jobstatus(...)
+assets = client.upload(images)
+manifest = client.create_manifest(manifest_level_metadata=manifest_level_metadata, assets=assets)
+result = client.ingest(manifest=manifest, assets=assets)
+status = client.jobstatus(result["job_id"])
+
 ```
 
-## Documentation & References 
+### Authentication
 
-See the following Media Presentation Service (MPS) documentation for more details:
+The ingest API requires [JWT tokens](https://jwt.io/) for authentication and authorization. The credentials needed to generate tokens are provided by LTS at registration time and can then be used with this library.
+
+The `Credentials` constructor can be configured as follows:
+
+- `issuer`:  Identifies the app or service issuing tokens.
+- `kid`: Identifies the key used for signing tokens. Ingest permissions are associated with the key.
+- `private_key_path`: Path to the private key provided by LTS for the given issuer.
+- `private_key_string`: The private key value as a string.
+- `expiration`: The length of time in seconds for which the token should be valid (default: `3600`).
+
+Note that the `private_key_path` and `private_key_string` options are mutually exclusive.
+
+### Client Configuration
+
+The `Client` constructor may be configured with the following options:
+
+- `account`: The account identifier.
+- `space`: The space within the account.
+- `namespace`: The NRS namespace for manifest and asset URLs.
+- `agent`: Name of the agent that created the assets.
+- `environment`: Ingest API environment: `dev`, `qa`, or `prod`.
+- `asset_prefix`: Optional prefix to use for image asset IDs (e.g. the application name).
+- `jwt_creds`: A `Credentials` instance for generating JWT tokens.
+- `boto_session`: A `boto3.session.Session` instance with permission to upload images to the S3 ingest bucket.
+
+Notes:
+- LTS will provide the `account`, `space`, `namespace`, and `agent` values.
+- LTS will provide the AWS credentials needed to upload images to S3. It's up to you how S3 credentials are managed, the only requirement is that a boto [session](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/session.html) is provided to the library.
+- To make requests to non-prod environments (`dev` or `qa), the client must be on VPN or the IP must be whitelisted. If the requests are coming from a cloud account, make sure to whitelist the IP range.
+
+### Documentation & References
+
+See the following LTS documentation for more details:
 
 - [Authentication & Authorization](https://docs.google.com/document/d/1qKHD--VUCWH4aEXUv7E3jEf0AnLDgNyhMpSLqCqnLbY/edit#heading=h.uuca9t2f0d35)
 - [Ingest API](https://docs.google.com/document/d/1seTnNx8Unwl4w4n39rdUKESuxU1IWMlpLjpZMVbsA1U/edit#heading=h.ru4gjiray64u)
@@ -67,10 +128,10 @@ $ cd lts-iiif-ingest-service
 ```
 $ python3 -m venv venv
 $ source venv/bin/activate
-$ pip install -r requirements.txt
+$ pip install -r requirements-dev.txt
 ```
-Optionally, to run linting / precommit hooks:
-`$ pip install -r requirements-dev.txt`
+
+Note that this will install all packages needed for the library as well as linting and pre-commit hooks.
 
 **Install pre-commit hooks:**
 
@@ -103,109 +164,52 @@ $ twine check dist/*
 $ twine upload dist/IIIFingest-VERSION*
 ```
 
-## Auth
-For local development, you can store tokens in /auth which is ignored (). For production environments, use environment variables injected via SSM or other secret management techniques. You can pass either `private_key_path` (e.g. to one of the `private.key`s below) or `private_key_string` (stringified environment variable) to a `Credentials` class instance; `Client` takes a `boto3` session.
-### File hierarchy: 
-- auth
-    - dev
-        - issuers
-            - atmch.json
-            - atmediamanager.json
-            - atomeka.json
-        - keys
-            - atmch
-                - atmcihdefault
-                    - private.key
-                    - public.key 
-            - atmediamanager
-                - atmediamanagerdefault
-                    - private.key
-                    - public.key
-            - atomeka
-                - atomeka
-                    - private.key
-                    - public.key
-    - prod
-        ...
-    - qa
-        ...
+### Managing auth credentials
 
+There are two types of auth credentials that need to be managed:
+1. Ingest API credentials.
+2. AWS S3 credentials.
 
-## Examples and notes
-- Upload a file: `python3 bucket.py --file=/Users/colecrawford/Github/lts-iiif-ingest-service/tests/images/27.586.1-cm-2016-02-09.tif --bucket=edu.harvard.huit.lts.mps.at-atdarth-dev`
-- Check it was uploaded: `aws s3 ls edu.harvard.huit.lts.mps.at-atdarth-dev` or `aws s3 ls s3://edu.harvard.huit.lts.mps.at-atdarth-dev --recursive --human-readable --summarize`
-- Generate a JWT token: `python3 iiif_jwt.py`
-- QA MPS endpoint: `https://mps-admin-qa.lib.harvard.edu/admin/ingest/initialize`
+Note that the suggestions here pertain to local development only. For production environments, it's recommended to use environment variables injected via SSM or other secret management techniques.
 
+**Ingest API credentials**:
 
-## Ingesting images and simple V2 manifest via Postman and without manifest generation(iiifpres module)
-Prerequisite if you are using `aws cli`, you must set `export AWS_PROFILE=<BUCKET CREDENTIALS>` to your desired bucket corresponding to your `.aws/credentials` permissions to upload files
-- Upload a file using `bucket.py` via [Examples and notes](#examples-and-notes) or the command below: 
+For local development, you may find it convenient to store credentials and configuration in a folder named `auth` either in this repository or separately (`auth` is git ignored by default). The directory structure should look something like this:
+
 ```
-$ export IIIF_QA_BUCKET=edu.harvard.huit.lts.mps.at-atomeka-qa
-$ aws s3 cp ./test_images/27.586.2A-cm-2016-02-09.tif s3://$IIIF_QA_BUCKET/iiif/
+auth
+├── dev
+│   ├── issuers
+│   │   ├── atapp1.json
+│   │   ├── atapp2.json
+│   │   └── atapp3.json
+│   └── keys
+│       ├── atapp1
+│       │   └── atapp1default
+│       │       ├── private.key
+│       │       └── public.key
+│       ├── atapp2
+│       │   └── atapp2default
+│       │       ├── private.key
+│       │       └── public.key
+│       └── atapp3
+│           └── atapp3efault
+│               ├── private.key
+│               └── public.key
+├── qa
+└── prod
 ```
 
-Note: you will need to set/create the folder/path inside the bucket named `/iiif/`
+With this approach, you can set the path in the `Credentials` constructor:
 
-- Generate the jwt token via [Examples and notes](#examples-and-notes). You will need to have the correct `private.key` and `public.key` in similar folder structure `/auth/qa/keys/omeka/omekadefault` and modify the test function within `iiif_jwt.py` to the following parameters `load_auth("atomeka", "qa")`
+```
+private_key_path = "auth/{env}/keys/{issuer}/{issuer}default/private.key"
+```
 
-- Create the ingess json using the example provided in `sample-manifests/success-test-ingest-manifest.json`. There is an example below with some fields ommited. You will need to update the fields listed below with `<UNIQUE IDENTIFIER>`(example: `OMEKATEST2`) and `<UNIQUE ID or NAME>`(corresponds with `URN-3` @id, example: `OMEKAMANIFEST2`) in your own json file.
-```
-{ ...
-    "assets": {
-      ...
-      "image": [
-        {
-          ...
-          "storageSrcKey": <Name of the image e.g."27.586.2A-cm-2016-02-09.tif">,
-          "identifier":"AT:<UNIQUE IDENTIFIER>",
-         ...
-    },
-     "manifest" : {
-      "@context": "http://iiif.io/api/presentation/2/context.json",
-      "@id": "https://mps-qa.lib.harvard.edu/iiif/2/URN-3:AT:<UNIQUE ID or NAME>:MANIFEST:2",
-      ...
-      ,
-      "sequences": [
-              {
-                  "@id": "https://mps-qa.lib.harvard.edu/URN-3:AT:<UNIQUE ID or NAME>/...
-                  "canvases": [
-                      {
-                          "@id": "https://mps-qa.lib.harvard.edu/URN-3:AT:<UNIQUE ID or NAME>/canvas/canvas-400000206.json",
-                        ...
-                          "images": [
-                              {
-                                  "@id": "https://mps-qa.lib.harvard.edu/URN-3:AT:<UNIQUE ID or NAME>/annotation/annotation-400000206.json",
-                                 ...
-                                  "on": "https://mps-qa.lib.harvard.edu/URN-3:AT:<UNIQUE ID or NAME>/canvas/canvas-400000206.json",
-                                  "resource": {
-                                      "@id": "https://mps-qa.lib.harvard.edu/assets/images/AT:<UNIQUE IDENTIFIER>/full/full/0/default.jpg",
-                                      ...
-                                      "service": {
-                                         ...
-                                          "@id": "https://mps-qa.lib.harvard.edu/assets/images/AT:<UNIQUE IDENTIFIER>"
-                                      }
-                                  }
-                              }
-                          ],
-                          "thumbnail": {
-                              "@id": "https://mps-qa.lib.harvard.edu/assets/images/AT:<UNIQUE IDENTIFIER>/full/,100/0/default.jpg",
-                              "@type": "dctypes:Image"
-                          }
-                      }
-                  ]
-              }
-          ],
-          "structures": [
-              {
-                  "@id": "https://mps-qa.lib.harvard.edu/URN-3:AT:<UNIQUE ID or NAME>/range/range-0-0.json",
-                  ...
-                  "canvases": ["https://mps-qa.lib.harvard.edu/URN-3:AT:<UNIQUE ID or NAME>/canvas/canvas-400000206.json"]
-              }
-          ]
-      }
-}
-```
-- use Postman to first set the bearer token to the generated jwt from previous steps and `POST` the json that you modified to the following endpoint: `https://mps-admin-qa.lib.harvard.edu/admin/ingest/initialize` Note: you will need to be on the `#WEBS` VPN for the `POST` to work.
-- After recieving a `200 success code` you should be able to access the image via `https://mps-qa.lib.harvard.edu/assets/images/AT:<UNIQUE IDENTIFIER>/full/,100/0/default.jpg` and manifest via `https://mps-qa.lib.harvard.edu/iiif/c/URN-3:AT:<UNIQUE ID or NAME>`
+**AWS S3 credentials**:
+
+For local development, you may choose to create a profile in `~/.aws/credentials` and reference that profile when creating the `boto3.Session` or set [environment variables](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/configuration.html#using-environment-variables) that boto3 can automatically load. 
+
+## License
+
+Apache 2.0, see [LICENSE](LICENSE.md) for details.
