@@ -91,6 +91,7 @@ def pingJob(
     completed = False
     start = time.time()
     pings = 0
+    status = {}
     while working:
         pings += 1
         r = jobStatus(job_id, endpoint)
@@ -129,4 +130,5 @@ def pingJob(
         "endpoint": endpoint,
         "pings": pings,
         "elapsed": round(time.time() - start),
+        "job_status": status["data"].get("job_status")
     }
