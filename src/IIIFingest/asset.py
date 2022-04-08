@@ -1,5 +1,6 @@
 import mimetypes
 import os
+import re
 from typing import Optional
 
 import shortuuid
@@ -20,13 +21,14 @@ def get_filename_noext(filepath):
 
 
 def create_asset_id(
+    namespace: str = "",
     asset_prefix: str = "",
     identifier: str = "",
     with_uuid: bool = True,
 ):
     identifier = identifier if identifier else ""
     optional_uuid = shortuuid.uuid() if with_uuid else ""
-    return f"{asset_prefix}{identifier}{optional_uuid}"
+    return f"{namespace}{asset_prefix}{identifier}{optional_uuid}"
 
 
 class Asset:
@@ -46,10 +48,12 @@ class Asset:
         label=None,
         metadata=None,
     ):
-        if asset_id and not asset_id.isalnum():
+        p = re.compile('^[a-zA-Z]+:[a-zA-Z0-9]+$')
+        if asset_id and not bool(p.match(asset_id)):
             raise ValueError(
-                f"Invalid asset_id {asset_id} - must be alphanumeric only."
+                f"Invalid asset_id {asset_id} - must be of the format namespace:identifer (alphanumeric)."
             )
+
         self.asset_id = asset_id
         self.filepath = filepath
         self.s3key = s3key

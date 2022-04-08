@@ -130,5 +130,5 @@ def pingJob(
         "endpoint": endpoint,
         "pings": pings,
         "elapsed": round(time.time() - start),
-        "job_status": status["data"].get("job_status")
+        "job_status": status["data"].get("job_status"),
     }
