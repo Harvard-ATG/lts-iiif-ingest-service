@@ -171,7 +171,7 @@ class Client:
             params = {
                 "space": self.space,
                 "createdByAgent": self.agent,
-                "identifier": asset.asset_id,
+                "identifier": f"{self.namespace}{asset.asset_id}",
                 "storageSrcPath": f"{src_path}/",
                 "storageSrcKey": src_key,
                 "policyDefinition": policy_definition,
