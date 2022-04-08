@@ -95,7 +95,7 @@ class Asset:
         if kwargs.get("extension"):
             extension = kwargs.get("extension")
         else:
-            extension = mimetypes.guess_extension(format) or ""
+            extension = mimetypes.guess_extension(format) or "" #This needs to be smarter; results in bad manifests if it doesn't exist?
 
         if kwargs.get("label"):
             label = kwargs.get("label")
