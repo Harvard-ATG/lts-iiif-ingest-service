@@ -35,6 +35,8 @@ class Client:
         environment: str = "qa",
         jwt_creds=None,
         boto_session=None,
+        ingest_proxies: Optional[dict] = None,
+        jobstatus_proxies: Optional[dict] = None,
     ):
         if not namespace or not namespace.isalnum():
             raise ValueError("Invalid or missing namespace_prefix")
@@ -53,6 +55,8 @@ class Client:
         self.environment = environment
         self.jwt_creds = jwt_creds
         self.boto_session = boto_session
+        self.ingest_proxies = ingest_proxies
+        self.jobstatus_proxies = jobstatus_proxies
 
         self.bucket_name = MPS_BUCKET_NAME.format(
             account=account, space=space, environment=environment
@@ -202,10 +206,14 @@ class Client:
         )
 
         logger.debug(f"Sending ingest request: {request_body}")
+        if self.ingest_proxies is not None:
+            logger.debug("Sending to proxy")
+        print(self.ingest_endpoint)
         response = sendIngestRequest(
             req=request_body,
             endpoint=self.ingest_endpoint,
             token=token,
+            proxies=self.ingest_proxies,
         )
         logger.debug(
             f"Received ingest response: {response.status_code} {response.text}"
@@ -216,7 +224,9 @@ class Client:
             response_data.get("data", {}).get("job_tracker_file", {}).get("_id", "")
         )
         if not job_id:
-            logger.warning("Ingest job ID not found. Maybe the ingest request failed?")
+            logger.warning(
+                "Ingest job ID not found. Maybe the ingest request failed?"
+            )  # If no ingest job ID, should fail gracefully
         else:
             logger.info(f"Ingest job ID: {job_id}")
 
@@ -233,8 +243,7 @@ class Client:
         """
         logger.info(f"Pinging job {job_id}")
         status = pingJob(
-            job_id=job_id,
-            endpoint=self.job_endpoint,
+            job_id=job_id, endpoint=self.job_endpoint, proxies=self.jobstatus_proxies
         )
         logger.info(f"Job status: {status}")
 
