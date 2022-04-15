@@ -35,6 +35,18 @@ def signed_request(
     )
 
 
+def endpoint_to_proxy(endpoint: str, proxy: str) -> str:
+    """For proxied requests, convert an MPS endpoint into a proxy endpoint"""
+    # https://mps-admin-qa.lib.harvard.edu/admin/ingest/jobstatus/
+    # proxy/environment/action/<job_id>
+    parts = endpoint.removeprefix("https://mps-admin-").rstrip("/").split("/")
+    environment = parts[0].split(".")[0]
+    action = parts[-1]
+    proxy.rstrip("/")
+    url = f"{proxy}/{environment}/{action}/"
+    return url
+
+
 # For consistency, either imageAsset should also be a class, or turn IIIFCanvas into a method which wraps dict properties
 # Currently, generate_manifest expects a list of dicts
 def createImageAsset(
@@ -97,37 +109,31 @@ def sendIngestRequest(
     req: dict,
     endpoint: str,
     token: str,
-    proxies: Optional[dict] = None,
-    session=Optional[boto3.Session],
+    proxy: Optional[str] = None,
+    session: Optional[boto3.Session] = None,
 ) -> requests.Response:
 
-    if proxies is not None:
-        try:
-            proxy = proxies.get("https")
-            data = {"endpoint": endpoint, "req": req}
-            headers = {
-                "Authorization": f"Bearer {token}",
-                "Content-Type": "application/x-amz-json-1.1",
-            }
-            # Requests to the proxy need to be signed - Lambda function URL, using AWS IAM auth
-            # If we can't get lambda:InvokeFunctionUrl permissions on the MPS S3 roles, we will need to manage a second set of IAM users AT controls and use that boto session here
-            # May need to move the token from headers to the body depending on how the IAM signing works, which would create divergence between the request formats
-            if not session:
-                session = boto3._get_default_session()
-            credentials = session.get_credentials()
-            creds = credentials.get_frozen_credentials()
-            # r = requests.post(
-            #     proxy,
-            #     headers={"Authorization": f"Bearer {token}"},
-            #     json={"endpoint": endpoint, "req": req},
-            # )
-            r = signed_request(
-                method="POST", url=proxy, creds=creds, data=data, headers=headers
-            )
-        except Exception as e:
-            # Key Error - should also have an exception for the session not working
-            logger.error("HTTPS proxy not found in proxy dict.")
-            logger.error(e)
+    if proxy:
+        data = {"endpoint": endpoint, "req": req}
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/x-amz-json-1.1",
+        }
+        # Requests to the proxy need to be signed - Lambda function URL, using AWS IAM auth
+        # If we can't get lambda:InvokeFunctionUrl permissions on the MPS S3 roles, we will need to manage a second set of IAM users AT controls and use that boto session here
+        # May need to move the token from headers to the body depending on how the IAM signing works, which would create divergence between the request formats
+        if not session:
+            session = boto3._get_default_session()
+        credentials = session.get_credentials()
+        creds = credentials.get_frozen_credentials()
+        # r = requests.post(
+        #     proxy,
+        #     headers={"Authorization": f"Bearer {token}"},
+        #     json={"endpoint": endpoint, "req": req},
+        # )
+        r = signed_request(
+            method="POST", url=proxy, creds=creds, data=data, headers=headers
+        )
 
     else:
         r = requests.post(
@@ -141,22 +147,11 @@ def sendIngestRequest(
 def jobStatus(
     job_id: str,
     endpoint: str = "https://mps-admin-qa.lib.harvard.edu/admin/ingest/jobstatus/",
-    proxies: Optional[dict] = None,
 ) -> requests.Response:
+    if not endpoint.endswith("/"):
+        endpoint = f"{endpoint}/"
     url = f"{endpoint}{job_id}"
-    if proxies is not None:
-        try:
-            proxy = proxies.get("https")
-            params = {"job_url": url}
-            r = requests.get(proxy, params=params)
-        except Exception as e:
-            logger.error(
-                "HTTPS proxy not found in proxy dict. Getting job status without proxy."
-            )
-            logger.error(e)
-            r = requests.get(url)
-    else:
-        r = requests.get(url)
+    r = requests.get(url)
     return r
 
 
@@ -165,16 +160,18 @@ def pingJob(
     endpoint: str = "https://mps-admin-qa.lib.harvard.edu/admin/ingest/jobstatus/",
     max_pings: int = 25,
     interval: int = 10,
-    proxies: Optional[dict] = None,
+    proxy: Optional[str] = None,
 ) -> dict:
     working = True
     completed = False
     start = time.time()
     pings = 0
     status = {}
+    if proxy:
+        endpoint = endpoint_to_proxy(endpoint, proxy)
     while working:
         pings += 1
-        r = jobStatus(job_id, endpoint, proxies=proxies)
+        r = jobStatus(job_id, endpoint)
         status = r.json()
         end = time.time()
         msg = ""

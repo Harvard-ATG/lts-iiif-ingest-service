@@ -51,6 +51,7 @@ def test_ingest_pipeline(args) -> None:
         asset_prefix=asset_prefix,
         jwt_creds=jwt_creds,
         boto_session=session,
+        proxy=None,  # Add proxy here if not on VPN
     )
 
     images = [
