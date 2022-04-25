@@ -9,3 +9,4 @@ build
 src/IIIFingest.egg-info
 venv
 dist
+tests/notebooks/.ipynb_checkpoints/*
