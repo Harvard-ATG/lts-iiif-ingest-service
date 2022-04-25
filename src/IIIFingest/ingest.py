@@ -1,3 +1,4 @@
+import json
 import logging
 import time
 from datetime import datetime
@@ -25,25 +26,50 @@ def signed_request(
     headers: Optional[dict] = None,
 ):
     """Sign requests which will be proxied to the ingest endpoint through AWS Lambda function URLs"""
+    if data:
+        json_string = json.dumps(data)
+    else:
+        json_string = None
     request = AWSRequest(
-        method=method, url=url, data=data, params=params, headers=headers
+        method=method, url=url, data=json_string, params=params, headers=headers
     )
     # "service_name" is generally "execute-api" for signing API Gateway requests
     SigV4Auth(creds, service_name, region).add_auth(request)
     return requests.request(
-        method=method, url=url, headers=dict(request.headers), data=data
+        method=method,
+        url=url,
+        headers=dict(request.headers),
+        data=json_string,
     )
 
 
 def endpoint_to_proxy(endpoint: str, proxy: str) -> str:
     """For proxied requests, convert an MPS endpoint into a proxy endpoint"""
-    # https://mps-admin-qa.lib.harvard.edu/admin/ingest/jobstatus/
+    # Ex: "https://mps-admin-qa.lib.harvard.edu/admin/ingest/jobstatus/6255a8a966b08c163ac5c880/"
+    # Ex: "https://mps-admin-qa.lib.harvard.edu/admin/ingest/initialize"
     # proxy/environment/action/<job_id>
     parts = endpoint.removeprefix("https://mps-admin-").rstrip("/").split("/")
+    # drop admin and ingest
+    try:
+        parts.remove("admin")
+    except ValueError as e:
+        logger.error("`admin` not found in endpoint string - endpoint_to_proxy")
+        logger.error(e)
+    try:
+        parts.remove("ingest")
+    except ValueError as e:
+        logger.error("`ingest` not found in endpoint string - endpoint_to_proxy")
+        logger.error(e)
     environment = parts[0].split(".")[0]
-    action = parts[-1]
+    action = parts[1]
+    try:
+        job_id = parts[2]
+    except Exception as e:
+        logger.info("No job ID found")
+        logger.info(e)
+        job_id = ""
     proxy.rstrip("/")
-    url = f"{proxy}/{environment}/{action}/"
+    url = f"{proxy}/{environment}/{action}/{job_id}"
     return url
 
 
@@ -114,25 +140,24 @@ def sendIngestRequest(
 ) -> requests.Response:
 
     if proxy:
-        data = {"endpoint": endpoint, "req": req}
+        data = {"payload": req, "token": f"Bearer {token}"}
         headers = {
-            "Authorization": f"Bearer {token}",
+            "Authorization": f"Bearer {token}",  # this is getting replaced by the AWS auth
             "Content-Type": "application/x-amz-json-1.1",
         }
         # Requests to the proxy need to be signed - Lambda function URL, using AWS IAM auth
         # If we can't get lambda:InvokeFunctionUrl permissions on the MPS S3 roles, we will need to manage a second set of IAM users AT controls and use that boto session here
-        # May need to move the token from headers to the body depending on how the IAM signing works, which would create divergence between the request formats
+        # Had to move the token from headers to the body as the AWS signing overrode the auth in headers, so there is some divergence between the request formats
         if not session:
             session = boto3._get_default_session()
         credentials = session.get_credentials()
         creds = credentials.get_frozen_credentials()
-        # r = requests.post(
-        #     proxy,
-        #     headers={"Authorization": f"Bearer {token}"},
-        #     json={"endpoint": endpoint, "req": req},
-        # )
+
+        proxied_url = endpoint_to_proxy(endpoint=endpoint, proxy=proxy)
+        logger.debug(f"proxied url {proxied_url}")
+
         r = signed_request(
-            method="POST", url=proxy, creds=creds, data=data, headers=headers
+            method="POST", url=proxied_url, creds=creds, data=data, headers=headers
         )
 
     else:
@@ -147,12 +172,31 @@ def sendIngestRequest(
 def jobStatus(
     job_id: str,
     endpoint: str = "https://mps-admin-qa.lib.harvard.edu/admin/ingest/jobstatus/",
+    proxy: Optional[str] = None,
+    session: Optional[boto3.Session] = None,
 ) -> requests.Response:
     if not endpoint.endswith("/"):
         endpoint = f"{endpoint}/"
     url = f"{endpoint}{job_id}"
-    r = requests.get(url)
-    return r
+
+    # Sign the requests
+    if proxy:
+        if not session:
+            session = boto3._get_default_session()
+        credentials = session.get_credentials()
+        creds = credentials.get_frozen_credentials()
+        proxied_url = endpoint_to_proxy(endpoint=url, proxy=proxy)
+        logger.debug(f"proxied url in jobStatus {proxied_url}")
+        r = signed_request(
+            method="GET",
+            url=proxied_url,
+            creds=creds,
+            headers={"Content-Type": "application/x-amz-json-1.1"},
+        )
+        return r
+    else:
+        r = requests.get(url)
+        return r
 
 
 def pingJob(
@@ -167,11 +211,9 @@ def pingJob(
     start = time.time()
     pings = 0
     status = {}
-    if proxy:
-        endpoint = endpoint_to_proxy(endpoint, proxy)
     while working:
         pings += 1
-        r = jobStatus(job_id, endpoint)
+        r = jobStatus(job_id=job_id, endpoint=endpoint, proxy=proxy)
         status = r.json()
         end = time.time()
         msg = ""

@@ -202,10 +202,8 @@ class Client:
             space_default=self.space,
             action_default="upsert",
         )
-
         logger.debug(f"Sending ingest request: {request_body}")
-        if self.proxy is not None:
-            logger.debug("Sending via proxy")
+
         response = sendIngestRequest(
             req=request_body,
             endpoint=self.ingest_endpoint,
