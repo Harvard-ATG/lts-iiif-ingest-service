@@ -35,6 +35,7 @@ def test_ingest_pipeline(args) -> None:
     issuer = args.issuer
     space = args.space
     environment = args.environment
+    proxy = args.proxy
     session = boto3.Session(profile_name=f"mps-{space}-{environment}")
 
     jwt_creds = Credentials(
@@ -51,7 +52,7 @@ def test_ingest_pipeline(args) -> None:
         asset_prefix=asset_prefix,
         jwt_creds=jwt_creds,
         boto_session=session,
-        proxy=None,  # Add proxy here if not on VPN
+        proxy=proxy,
     )
 
     images = [
@@ -131,5 +132,6 @@ if __name__ == "__main__":
     parser.add_argument("--space", "-s", help="set space", default="atdarth")
     parser.add_argument("--environment", "-e", help="set environment", default="qa")
     parser.add_argument("--asset-prefix", "-a", help="set asset prefix", default="")
+    parser.add_argument("--proxy", "-p", help="Set proxy", default=None)
     args = parser.parse_args()
     test_ingest_pipeline(args)
