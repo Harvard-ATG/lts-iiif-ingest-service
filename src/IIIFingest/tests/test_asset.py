@@ -1,3 +1,4 @@
+from turtle import width
 import pytest
 import os.path
 from PIL import Image
@@ -27,3 +28,7 @@ def test_asset_created_from_file():
     assert asset.width == 3600
     assert asset.height == 564
 
+def test_height_width_asset_created_from_file():
+    asset = Asset.from_file(image_path, width=1, height=1)
+    assert asset.width == 1
+    assert asset.height == 1
