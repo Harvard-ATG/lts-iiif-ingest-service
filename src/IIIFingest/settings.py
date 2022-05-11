@@ -8,12 +8,20 @@ VALID_ENVIRONMENTS = ("dev", "qa", "prod")
 # MPS Bucket used by ingest process
 MPS_BUCKET_NAME = "edu.harvard.huit.lts.mps.{account}-{space}-{environment}"
 
-# MPS API endpoints
-MPS_INGEST_ENDPOINT = (
+# MPS API endpoints - dev (older network restricted ALBs)
+MPS_INGEST_ENDPOINT_PRIVATE = (
     "https://mps-admin-{environment}.lib.harvard.edu/admin/ingest/initialize"
 )
-MPS_JOBSTATUS_ENDPOINT = (
+MPS_JOBSTATUS_ENDPOINT_PRIVATE = (
     "https://mps-admin-{environment}.lib.harvard.edu/admin/ingest/jobstatus/"
+)
+
+# MPS API endpoints - QA and prod (new public ALBs)
+MPS_INGEST_ENDPOINT = (
+    "https://mps-ingest-{environment}.lib.harvard.edu/admin/ingest/initialize"
+)
+MPS_JOBSTATUS_ENDPOINT = (
+    "https://mps-ingest-{environment}.lib.harvard.edu/admin/ingest/jobstatus/"
 )
 
 # Base URL for images
