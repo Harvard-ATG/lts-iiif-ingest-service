@@ -12,7 +12,9 @@ from .settings import (
     MPS_ASSET_BASE_URL,
     MPS_BUCKET_NAME,
     MPS_INGEST_ENDPOINT,
+    MPS_INGEST_ENDPOINT_PRIVATE,
     MPS_JOBSTATUS_ENDPOINT,
+    MPS_JOBSTATUS_ENDPOINT_PRIVATE,
     MPS_MANIFEST_BASE_URL,
     VALID_ENVIRONMENTS,
 )
@@ -63,8 +65,16 @@ class Client:
         self.manifest_base_url = MPS_MANIFEST_BASE_URL.format(
             environment=environment, namespace=namespace
         )
-        self.ingest_endpoint = MPS_INGEST_ENDPOINT.format(environment=environment)
-        self.job_endpoint = MPS_JOBSTATUS_ENDPOINT.format(environment=environment)
+        if self.environment == "dev":
+            self.ingest_endpoint = MPS_INGEST_ENDPOINT_PRIVATE.format(
+                environment=environment
+            )
+            self.job_endpoint = MPS_JOBSTATUS_ENDPOINT_PRIVATE.format(
+                environment=environment
+            )
+        else:
+            self.ingest_endpoint = MPS_INGEST_ENDPOINT.format(environment=environment)
+            self.job_endpoint = MPS_JOBSTATUS_ENDPOINT.format(environment=environment)
 
     def _get_asset_url(self, asset_id: str) -> str:
         """Constructs the asset URL."""
