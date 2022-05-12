@@ -1,5 +1,6 @@
 import json
 import os
+from typing import Optional
 
 import jsonschema
 from IIIFpres import iiifpapi3
@@ -19,12 +20,12 @@ def createManifest(
     service_type: str = "ImageService2",  # Image API level - see https://iiif.io/api/presentation/3.0/#service
     service_profile: str = "level2",  # Compliance level - see https://iiif.io/api/image/2.1/compliance/ and https://iiif.io/api/image/3.0/compliance/
     # service_id: str = "https://mps-qa.lib.harvard.edu/assets/images/", # Currently set in annotation.id; used for annotation.body.id and service.id; this is MPS rather than NRS; could be hoisted to here
-    manifest_metadata: list = None,
-    rights: str = None,
-    required_statement: list = None,
-    summary: list = None,  # can also be str
-    thumbnails: list = None,
-) -> iiifpapi3.Manifest():
+    manifest_metadata: Optional[list] = None,
+    rights: Optional[str] = None,
+    required_statement: Optional[list] = None,
+    summary: Optional[list] = None,  # can also be str
+    thumbnails: Optional[list] = None,
+) -> iiifpapi3.Manifest:
     """Creates and validates a IIIF manifest"""
 
     manifest = iiifpapi3.Manifest()
@@ -136,7 +137,7 @@ def createManifest(
     return manifest
 
 
-def validateManifest(manifest: iiifpapi3.Manifest(), read_from_file: bool = True):
+def validateManifest(manifest: iiifpapi3.Manifest, read_from_file: bool = True):
     """Validates a manifest. If you pass a string and read_from_file to True, it will read the JSON file to validate"""
     if not os.path.exists('iiif_3_0.json'):
         import urllib.request
@@ -153,117 +154,3 @@ def validateManifest(manifest: iiifpapi3.Manifest(), read_from_file: bool = True
     else:
         with open("iiif_3_0.json") as schema:
             jsonschema.validate(instance=json.load(instance), schema=json.load(schema))
-
-
-# TODO move tests to an actual tests file, generate test manifests and read in and compare
-
-
-def cookbook_test():
-    manifest = createManifest(
-        base_url="https://iiif.io/api/cookbook/recipe/0009-book-1/",
-        labels=[{"lang": "en", "label": "Simple Manifest - Book"}],
-        canvases=[
-            # need to add asset_id for canvas_id
-            # need to add format
-            {
-                "label": "Blank page",
-                "width": 3204,
-                "height": 4613,
-                "id": "https://iiif.io/api/image/3.0/example/reference/59d09e6773341f28ea166e9f3c1e674f-gallica_ark_12148_bpt6k1526005v_f18",  # this is really the annotation.id - MPS asset location
-                "service": "/full/max/0/default.jpg",
-            },
-            {
-                "label": "Frontispiece",
-                "width": 3186,
-                "height": 4612,
-                "id": "https://iiif.io/api/image/3.0/example/reference/59d09e6773341f28ea166e9f3c1e674f-gallica_ark_12148_bpt6k1526005v_f19",
-                "service": "/full/max/0/default.jpg",
-                "metadata": [
-                    {
-                        "label": "Reference",
-                        "value": "ID124",
-                        "label_lang": "en",
-                        "value_lang": "en",
-                    }
-                ],
-            },
-        ],
-        behaviors=["paged"],
-        rights="http://creativecommons.org/licenses/by-sa/3.0/",
-        required_statement=[
-            {
-                "label": "Attribution",
-                "value": "Cole Crawford",
-                "label_lang": "en",
-                "value_lang": "en",
-            }
-        ],
-        manifest_metadata=[
-            {
-                "label": "Creator",
-                "value": "Unknown",
-                "label_lang": "en",
-                "value_lang": "en",
-            },
-            {
-                "label": "Date",
-                "value": "19th Century",
-                "label_lang": "en",
-                "value_lang": "en",
-            },
-        ],
-    )
-    manifest.json_save("test-manifest.json")
-    return manifest
-
-
-def mps_mcih_ingest_test():
-    manifest = createManifest(
-        base_url="https://nrs-qa.lib.harvard.edu/URN-3:AT:TESTMANIFEST3:MANIFEST:3",
-        labels=[{"lang": "en", "label": "Test DARTH manifest - Cole"}],
-        required_statement=[
-            {
-                "label": "Attribution",
-                "value": "Jinah Kim",
-                "label_lang": "en",
-                "value_lang": "en",
-            }
-        ],
-        canvases=[
-            {
-                "label": "Test image 1",  # this can be a string, which uses the default_lang, or a dict with lang/value
-                "height": 564,
-                "width": 3600,
-                "asset_id": "TESTASSET3",  # canvas.id
-                "id": "https://mps-qa.lib.harvard.edu/assets/images/AT:TESTASSET3",  # service.id
-                "service": "/full/max/0/default.tif",  # anno.id = service.id + service; should have a default service based on format
-                "format": "image/tiff",  # could get this from the filepath
-                "metadata": [],
-            },
-            {
-                "label": "Test image 2",
-                "height": 581,
-                "width": 3600,
-                "asset_id": "TESTASSET4",
-                "id": "https://mps-qa.lib.harvard.edu/assets/images/AT:TESTASSET4",
-                "service": "/full/max/0/default.tif",
-                "format": "image/tiff",
-                "metadata": [],
-            },
-        ],
-        rights="http://creativecommons.org/licenses/by-sa/3.0/",
-        manifest_metadata=[
-            {
-                "label": "Creator",
-                "value": "Unknown",
-                "label_lang": "en",
-                "value_lang": "en",
-            }
-        ],
-    )
-    manifest.json_save("ingest-test.json")
-    return manifest
-
-
-if __name__ == '__main__':
-    mps_mcih_ingest_test()
