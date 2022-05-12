@@ -157,11 +157,12 @@ $ python3 -m unittest discover -s ./tests
 
 ### PyPi release
 ```
+// VERSION = 1.0.4.1, 1.0.5, etc
 $ pip install twine
 $ python setup.py sdist bdist_wheel
-$ tar tzf dist IIIFingest-VERSION-.tar.gz
+$ tar tzf dist/IIIFingest-{VERSION}.tar.gz
 $ twine check dist/*
-$ twine upload dist/IIIFingest-VERSION*
+$ twine upload dist/IIIFingest-{VERSION}*
 ```
 
 ### Managing auth credentials
