@@ -114,6 +114,11 @@ def pingJob(
             logger.debug(msg)
             logger.debug(status)
             working = False
+        elif status["data"].get("job_status") == "queued":
+            msg = f"-------- Job {job_id} queued. {round(end - start)} seconds and {pings} pings -------"
+            logger.debug(msg)
+            logger.debug(status)
+            time.sleep(interval)
         elif pings > max_pings:
             msg = f"-------- Job {job_id} did not complete within {round(end - start)} seconds and {pings} pings (max pings {max_pings})"
             logger.debug(status)
