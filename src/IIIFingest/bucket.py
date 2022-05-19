@@ -36,7 +36,9 @@ def upload_image_get_metadata(image_path, bucket_name, s3_path="", session=None)
         return False
 
 
-def upload_directory(path, bucket_name, session=None):
+def upload_directory(path, bucket_name, s3_path="", session=None):
+    if s3_path and not s3_path.endswith("/"):
+        s3_path += "/"
     if not session:
         session = boto3._get_default_session()
     s3 = session.resource('s3')
@@ -46,7 +48,8 @@ def upload_directory(path, bucket_name, session=None):
         for file in files:
             full_path = os.path.join(subdir, file)
             with open(full_path, 'rb') as data:
-                bucket.put_object(Key=full_path[len(path) + 1 :], Body=data)
+                bucket_file_path = full_path[len(path) + 1 :]
+                bucket.put_object(Key=f"{s3_path}{bucket_file_path}" if s3_path else bucket_file_path, Body=data)
 
 
 if __name__ == "__main__":
