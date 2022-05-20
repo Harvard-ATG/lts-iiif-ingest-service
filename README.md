@@ -165,6 +165,8 @@ $ twine check dist/*
 $ twine upload dist/IIIFingest-{VERSION}*
 ```
 
+If you are using an API key with PyPi, your username is `__token__`. You can create a `$HOME/.pypirc` file to avoid needing to copy & paste that token ([see docs](https://packaging.python.org/en/latest/guides/distributing-packages-using-setuptools/#create-an-account)).
+
 ### Managing auth credentials
 
 There are two types of auth credentials that need to be managed:

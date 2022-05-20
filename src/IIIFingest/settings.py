@@ -34,3 +34,4 @@ MPS_ASSET_BASE_URL = (
 # Base URL for manifests
 # The format should be URN-3:{namespace}:{manifest_name}:MANIFEST:{PreziVersion}
 MPS_MANIFEST_BASE_URL = "https://nrs-{environment}.lib.harvard.edu/URN-3:{namespace}:"
+MPS_MANIFEST_BASE_URL_PROD = "https://nrs.lib.harvard.edu/URN-3:{namespace}:"

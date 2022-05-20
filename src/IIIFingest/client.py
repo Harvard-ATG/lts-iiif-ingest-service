@@ -18,6 +18,7 @@ from .settings import (
     MPS_JOBSTATUS_ENDPOINT_PROD,
     MPS_JOBSTATUS_ENDPOINT_QA,
     MPS_MANIFEST_BASE_URL,
+    MPS_MANIFEST_BASE_URL_PROD,
     VALID_ENVIRONMENTS,
 )
 
@@ -64,9 +65,8 @@ class Client:
         self.asset_base_url = MPS_ASSET_BASE_URL.format(
             environment=environment, namespace=namespace
         )
-        self.manifest_base_url = MPS_MANIFEST_BASE_URL.format(
-            environment=environment, namespace=namespace
-        )
+
+        # Some divergence in dev/qa/prod ingest endpoint formats; prod doesn't have prod in URL, QA/Prod admin endpoint is different format than dev
         if self.environment == "dev":
             self.ingest_endpoint = MPS_INGEST_ENDPOINT_PRIVATE.format(
                 environment=environment
@@ -74,12 +74,21 @@ class Client:
             self.job_endpoint = MPS_JOBSTATUS_ENDPOINT_PRIVATE.format(
                 environment=environment
             )
+            self.manifest_base_url = MPS_MANIFEST_BASE_URL.format(
+                environment=environment, namespace=namespace
+            )
         elif self.environment == "qa":
             self.ingest_endpoint = MPS_INGEST_ENDPOINT_QA
             self.job_endpoint = MPS_JOBSTATUS_ENDPOINT_QA
+            self.manifest_base_url = MPS_MANIFEST_BASE_URL.format(
+                environment=environment, namespace=namespace
+            )
         elif self.environment == "prod":
             self.ingest_endpoint = MPS_INGEST_ENDPOINT_PROD
             self.job_endpoint = MPS_JOBSTATUS_ENDPOINT_PROD
+            self.manifest_base_url = MPS_MANIFEST_BASE_URL_PROD.format(
+                namespace=namespace
+            )
 
     def _get_asset_url(self, asset_id: str) -> str:
         """Constructs the asset URL."""
