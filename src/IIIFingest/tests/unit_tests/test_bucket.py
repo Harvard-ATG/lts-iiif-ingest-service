@@ -1,9 +1,11 @@
+import os.path
+
 import boto3
 import pytest
-import os.path
 from moto import mock_s3
+
+from ...bucket import upload_directory, upload_image_get_metadata
 from ...settings import ROOT_DIR
-from ...bucket import upload_image_get_metadata, upload_directory
 
 abs_path = os.path.abspath(os.path.join(ROOT_DIR, '../..'))
 image_path = os.path.join(abs_path, "images", "27.586.1-cm-2016-02-09.tif")

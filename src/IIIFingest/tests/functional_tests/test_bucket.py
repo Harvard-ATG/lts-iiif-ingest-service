@@ -1,11 +1,12 @@
+import os.path
+
 import boto3
 import pytest
-import os.path
-from PIL import Image
 from dotenv import load_dotenv
-from ...settings import ROOT_DIR
+from PIL import Image
 
-from ...bucket import upload_image_get_metadata, upload_directory
+from ...bucket import upload_directory, upload_image_get_metadata
+from ...settings import ROOT_DIR
 
 load_dotenv()
 
