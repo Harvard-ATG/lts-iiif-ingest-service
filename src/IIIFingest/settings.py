@@ -17,11 +17,13 @@ MPS_JOBSTATUS_ENDPOINT_PRIVATE = (
 )
 
 # MPS API endpoints - QA and prod (new public ALBs)
-MPS_INGEST_ENDPOINT = (
-    "https://mps-ingest-{environment}.lib.harvard.edu/admin/ingest/initialize"
+MPS_INGEST_ENDPOINT_QA = "https://mps-ingest-qa.lib.harvard.edu/admin/ingest/initialize"
+MPS_JOBSTATUS_ENDPOINT_QA = (
+    "https://mps-ingest-qa.lib.harvard.edu/admin/ingest/jobstatus/"
 )
-MPS_JOBSTATUS_ENDPOINT = (
-    "https://mps-ingest-{environment}.lib.harvard.edu/admin/ingest/jobstatus/"
+MPS_INGEST_ENDPOINT_PROD = "https://mps-ingest.lib.harvard.edu/admin/ingest/initialize"
+MPS_JOBSTATUS_ENDPOINT_PROD = (
+    "https://mps-ingest.lib.harvard.edu/admin/ingest/jobstatus/"
 )
 
 # Base URL for images

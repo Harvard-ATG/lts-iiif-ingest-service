@@ -11,10 +11,12 @@ from .ingest import createImageAsset, pingJob, sendIngestRequest, wrapIngestRequ
 from .settings import (
     MPS_ASSET_BASE_URL,
     MPS_BUCKET_NAME,
-    MPS_INGEST_ENDPOINT,
     MPS_INGEST_ENDPOINT_PRIVATE,
-    MPS_JOBSTATUS_ENDPOINT,
+    MPS_INGEST_ENDPOINT_PROD,
+    MPS_INGEST_ENDPOINT_QA,
     MPS_JOBSTATUS_ENDPOINT_PRIVATE,
+    MPS_JOBSTATUS_ENDPOINT_PROD,
+    MPS_JOBSTATUS_ENDPOINT_QA,
     MPS_MANIFEST_BASE_URL,
     VALID_ENVIRONMENTS,
 )
@@ -72,9 +74,12 @@ class Client:
             self.job_endpoint = MPS_JOBSTATUS_ENDPOINT_PRIVATE.format(
                 environment=environment
             )
-        else:
-            self.ingest_endpoint = MPS_INGEST_ENDPOINT.format(environment=environment)
-            self.job_endpoint = MPS_JOBSTATUS_ENDPOINT.format(environment=environment)
+        elif self.environment == "qa":
+            self.ingest_endpoint = MPS_INGEST_ENDPOINT_QA
+            self.job_endpoint = MPS_JOBSTATUS_ENDPOINT_QA
+        elif self.environment == "prod":
+            self.ingest_endpoint = MPS_INGEST_ENDPOINT_PROD
+            self.job_endpoint = MPS_JOBSTATUS_ENDPOINT_PROD
 
     def _get_asset_url(self, asset_id: str) -> str:
         """Constructs the asset URL."""
