@@ -42,7 +42,7 @@ class TestBucket:
         upload_directory_response = upload_directory(
             image_dir_path, self.test_bucket_name, s3_path
         )
-        assert upload_directory_response == True
+        assert upload_directory_response is not False
 
     def test_fail_upload_directory(self):
         image_dir_path = os.path.join(abs_path, "images")

@@ -45,7 +45,7 @@ class TestFunctionalBucket:
         upload_directory_response = upload_directory(
             self.image_dir_path, self.bucket_name, self.s3_path
         )
-        assert upload_directory_response == True
+        assert upload_directory_response is not False
         # cleanup s3
         bucket.objects.filter(Prefix=self.s3_path).delete()
 
