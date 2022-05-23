@@ -152,8 +152,15 @@ $ python3 tests/test_client.py -i atmediamanager -s atmediamanager -e qa --asset
 To run unit tests:
 
 ```
-$ python3 -m unittest discover -s ./tests
+$ pytest src/IIIFingest/tests/unit_tests/
 ```
+
+To run functional tests(tests which hit the dev bucket via AWS cli):
+
+```
+$ pytest src/IIIFingest/tests/functional_tests/
+```
+Note: you can specify a specific function via `pytest src/IIIFingest/tests/unit_tests/test_bucket.py::<functionname>`
 
 ### PyPi release
 ```
