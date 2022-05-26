@@ -18,12 +18,9 @@ class TestFunctionalBucket:
     s3_path = "testing/"
     file_name = "27.586.1-cm-2016-02-09.tif"
     bucket_name = os.getenv('TEST_BUCKET')
-    test_access_key = os.getenv('TEST_ACCESS_KEY')
-    test_secret_key = os.getenv('TEST_SECRET_KEY')
+    test_aws_profile = os.getenv('TEST_AWS_PROFILE')
     key = f"{s3_path}{file_name}"
-    default_session = boto3.Session(
-        aws_access_key_id=test_access_key, aws_secret_access_key=test_secret_key
-    )
+    default_session = boto3.Session(profile_name=test_aws_profile)
     image_dir_path = os.path.join(abs_path, "images")
 
     def test_functional_upload_image_get_metadata(self):

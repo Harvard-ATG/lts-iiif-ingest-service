@@ -155,7 +155,7 @@ To run functional tests(tests which hit the dev bucket via AWS cli):
 $ pytest src/IIIFingest/tests/functional_tests/
 ```
 Note:
-- To run functional test you will need to provide a `TEST_SECRET_KEY` and `TEST_ACCESS_KEY` in your `.env` file
+- To run functional test you will need to provide a `TEST_AWS_PROFILE` in your `.env` file
 - You can specify a specific function via `pytest src/IIIFingest/tests/unit_tests/test_bucket.py::<functionname>`
 
 ### PyPi release
