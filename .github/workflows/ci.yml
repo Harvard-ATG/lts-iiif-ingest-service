@@ -34,6 +34,6 @@ jobs:
         if: steps.python-cache.outputs.cache-hit != 'true'
       - name: Run linting checks
         run: |
-          isort src/IIIFingest/tests --check
-          black src/IIIFingest/tests --check
-          flake8 src/IIIFingest/tests
+          isort src --check
+          black src --check
+          flake8 src

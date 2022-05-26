@@ -6,7 +6,6 @@ import boto3
 from boto3.exceptions import S3UploadFailedError
 from botocore.exceptions import ClientError
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -40,7 +39,6 @@ def upload_image_get_metadata(image_path, bucket_name, s3_path="", session=None)
 
 
 def upload_directory(path, bucket_name, s3_path="", session=None):
-    client = boto3.resource('s3')
     if s3_path and not s3_path.endswith("/"):
         s3_path += "/"
     if not session:
@@ -53,7 +51,12 @@ def upload_directory(path, bucket_name, s3_path="", session=None):
                 full_path = os.path.join(subdir, file)
                 with open(full_path, 'rb') as data:
                     bucket_file_path = full_path[len(path) + 1 :]
-                    bucket.put_object(Key=f"{s3_path}{bucket_file_path}" if s3_path else bucket_file_path, Body=data)
+                    bucket.put_object(
+                        Key=f"{s3_path}{bucket_file_path}"
+                        if s3_path
+                        else bucket_file_path,
+                        Body=data,
+                    )
         return True
     except ClientError as e:
         logging.error(e)

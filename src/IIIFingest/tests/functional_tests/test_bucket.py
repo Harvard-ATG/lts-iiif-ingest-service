@@ -18,13 +18,17 @@ class TestFunctionalBucket:
     s3_path = "testing/"
     file_name = "27.586.1-cm-2016-02-09.tif"
     bucket_name = os.getenv('TEST_BUCKET')
+    test_access_key = os.getenv('TEST_ACCESS_KEY')
+    test_secret_key = os.getenv('TEST_SECRET_KEY')
     key = f"{s3_path}{file_name}"
-    default_session = boto3._get_default_session()
+    default_session = boto3.Session(
+        aws_access_key_id=test_access_key, aws_secret_access_key=test_secret_key
+    )
     image_dir_path = os.path.join(abs_path, "images")
 
     def test_functional_upload_image_get_metadata(self):
         image_metadata = upload_image_get_metadata(
-            self.image_path, self.bucket_name, self.s3_path
+            self.image_path, self.bucket_name, self.s3_path, self.default_session
         )
         assert image_metadata == self.key
         # cleanup
@@ -38,12 +42,11 @@ class TestFunctionalBucket:
             assert upload_image_get_metadata(self.image_path, bucket, self.s3_path)
 
     def test_functional_upload_directory(self):
-        default_session = boto3._get_default_session()
-        s3 = default_session.resource('s3')
+        s3 = self.default_session.resource('s3')
         bucket = s3.Bucket(self.bucket_name)
 
         upload_directory_response = upload_directory(
-            self.image_dir_path, self.bucket_name, self.s3_path
+            self.image_dir_path, self.bucket_name, self.s3_path, self.default_session
         )
         assert upload_directory_response is not False
         # cleanup s3

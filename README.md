@@ -143,12 +143,6 @@ $ pre-commit install
 
 ### Testing
 
-To run an end-to-end test:
-
-```
-$ python3 tests/test_client.py -i atmediamanager -s atmediamanager -e qa --asset-prefix mcih
-```
-
 To run unit tests:
 
 ```
@@ -160,7 +154,9 @@ To run functional tests(tests which hit the dev bucket via AWS cli):
 ```
 $ pytest src/IIIFingest/tests/functional_tests/
 ```
-Note: you can specify a specific function via `pytest src/IIIFingest/tests/unit_tests/test_bucket.py::<functionname>`
+Note:
+- To run functional test you will need to provide a `TEST_SECRET_KEY` and `TEST_ACCESS_KEY` in your `.env` file
+- You can specify a specific function via `pytest src/IIIFingest/tests/unit_tests/test_bucket.py::<functionname>`
 
 ### PyPi release
 ```
