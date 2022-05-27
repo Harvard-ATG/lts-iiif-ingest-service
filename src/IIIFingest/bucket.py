@@ -3,6 +3,7 @@ import logging
 import os
 
 import boto3
+from boto3.exceptions import S3UploadFailedError
 from botocore.exceptions import ClientError
 
 logger = logging.getLogger(__name__)
@@ -14,7 +15,7 @@ def upload_image_get_metadata(image_path, bucket_name, s3_path="", session=None)
     s3 = session.resource('s3')
     bucket = s3.Bucket(bucket_name)
 
-    file_dir, file_name = os.path.split(image_path)
+    _, file_name = os.path.split(image_path)
     # make sure s3_path ends in a slash
     if s3_path and not s3_path.endswith("/"):
         s3_path += "/"
@@ -31,22 +32,35 @@ def upload_image_get_metadata(image_path, bucket_name, s3_path="", session=None)
     try:
         bucket.upload_file(Filename=image_path, Key=key)
         return key
-    except ClientError as e:
+
+    except S3UploadFailedError as e:
         logging.error(e)
-        return False
+        raise e
 
 
-def upload_directory(path, bucket_name, session=None):
+def upload_directory(path, bucket_name, s3_path="", session=None):
+    if s3_path and not s3_path.endswith("/"):
+        s3_path += "/"
     if not session:
         session = boto3._get_default_session()
     s3 = session.resource('s3')
     bucket = s3.Bucket(bucket_name)
-
-    for subdir, dirs, files in os.walk(path):
-        for file in files:
-            full_path = os.path.join(subdir, file)
-            with open(full_path, 'rb') as data:
-                bucket.put_object(Key=full_path[len(path) + 1 :], Body=data)
+    try:
+        for subdir, dirs, files in os.walk(path):
+            for file in files:
+                full_path = os.path.join(subdir, file)
+                with open(full_path, 'rb') as data:
+                    bucket_file_path = full_path[len(path) + 1 :]
+                    bucket.put_object(
+                        Key=f"{s3_path}{bucket_file_path}"
+                        if s3_path
+                        else bucket_file_path,
+                        Body=data,
+                    )
+        return True
+    except ClientError as e:
+        logging.error(e)
+        raise e
 
 
 if __name__ == "__main__":
