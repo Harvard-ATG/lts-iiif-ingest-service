@@ -6,11 +6,12 @@ from boto3.exceptions import S3UploadFailedError
 from botocore.exceptions import ClientError
 from moto import mock_s3
 
-from ...bucket import upload_directory, upload_image_get_metadata
-from ...settings import ROOT_DIR
+from IIIFingest.bucket import upload_directory, upload_image_get_metadata
 
-abs_path = os.path.abspath(os.path.join(ROOT_DIR, '../..'))
-image_path = os.path.join(abs_path, "images", "27.586.1-cm-2016-02-09.tif")
+TESTS_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+IMAGES_DIR = os.path.join(TESTS_DIR, "images")
+
+image_path = os.path.join(IMAGES_DIR, "27.586.1-cm-2016-02-09.tif")
 s3_path = "testing/"
 
 
@@ -38,13 +39,13 @@ class TestBucket:
 
     def test_upload_directory(self):
         self.conn.create_bucket(Bucket=self.test_bucket_name)
-        image_dir_path = os.path.join(abs_path, "images")
+        image_dir_path = IMAGES_DIR
         upload_directory_response = upload_directory(
             image_dir_path, self.test_bucket_name, s3_path
         )
         assert upload_directory_response is not False
 
     def test_fail_upload_directory(self):
-        image_dir_path = os.path.join(abs_path, "images")
+        image_dir_path = IMAGES_DIR
         with pytest.raises(ClientError):
             assert upload_directory(image_dir_path, self.test_bucket_name, s3_path)
