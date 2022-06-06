@@ -9,19 +9,20 @@ from dotenv import load_dotenv
 from IIIFIngest.bucket import upload_directory, upload_image_get_metadata
 
 TESTS_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+IMAGES_DIR = os.path.join(TESTS_DIR, "images")
 
 load_dotenv()
 
 
 class TestFunctionalBucket:
-    image_path = os.path.join(TESTS_DIR, "images", "27.586.1-cm-2016-02-09.tif")
+    image_path = os.path.join(IMAGES_DIR, "27.586.1-cm-2016-02-09.tif")
     s3_path = "testing/"
     file_name = "27.586.1-cm-2016-02-09.tif"
     bucket_name = os.getenv('TEST_BUCKET')
     test_aws_profile = os.getenv('TEST_AWS_PROFILE')
     key = f"{s3_path}{file_name}"
     default_session = boto3.Session(profile_name=test_aws_profile)
-    image_dir_path = os.path.join(TESTS_DIR, "images")
+    image_dir_path = IMAGES_DIR
 
     def test_functional_upload_image_get_metadata(self):
         image_metadata = upload_image_get_metadata(
