@@ -1,4 +1,3 @@
-import boto3
 import pytest
 from boto3.exceptions import S3UploadFailedError
 from botocore.exceptions import ClientError
@@ -10,21 +9,15 @@ s3_path = "testing/"
 
 
 @mock_s3
-@pytest.mark.usefixtures("aws_credentials")
 class TestBucket:
     test_bucket_name = 'iiif-ingest-test-bucket'
     file_name = "27.586.1-cm-2016-02-09.tif"
     key = f"{s3_path}{file_name}"
-    conn = None
 
-    @pytest.fixture(autouse=True, scope='class')
-    def setup_conn(self):
-        self.__class__.conn = boto3.resource('s3', region_name='us-east-1')
-
-    def test_upload_image_get_metadata(self, test_images):
+    def test_upload_image_get_metadata(self, test_images, boto_session):
         # We need to create the bucket since this is all in Moto's 'virtual' AWS account
         image_path = test_images[self.file_name]["filepath"]
-        self.conn.create_bucket(Bucket=self.test_bucket_name)
+        boto_session.resource('s3').create_bucket(Bucket=self.test_bucket_name)
         image_metadata = upload_image_get_metadata(
             image_path, self.test_bucket_name, s3_path
         )
@@ -35,8 +28,8 @@ class TestBucket:
         with pytest.raises(S3UploadFailedError):
             assert upload_image_get_metadata(image_path, self.test_bucket_name, s3_path)
 
-    def test_upload_directory(self, images_dir):
-        self.conn.create_bucket(Bucket=self.test_bucket_name)
+    def test_upload_directory(self, images_dir, boto_session):
+        boto_session.resource('s3').create_bucket(Bucket=self.test_bucket_name)
         upload_directory_response = upload_directory(
             images_dir, self.test_bucket_name, s3_path
         )

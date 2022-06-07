@@ -1,6 +1,7 @@
 import os
 import os.path
 
+import boto3
 import pytest
 
 TESTS_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -76,11 +77,12 @@ def test_images(images_dir):
     }
 
 
-@pytest.fixture(scope='function')
-def aws_credentials():
-    """Mocked AWS Credentials for moto."""
-    os.environ['AWS_ACCESS_KEY_ID'] = 'testing'
-    os.environ['AWS_SECRET_ACCESS_KEY'] = 'testing'
-    os.environ['AWS_SECURITY_TOKEN'] = 'testing'
-    os.environ['AWS_SESSION_TOKEN'] = 'testing'
-    os.environ['AWS_DEFAULT_REGION'] = 'us-east-1'
+@pytest.fixture
+def boto_session():
+    """Fake boto session for testing."""
+    return boto3.Session(
+        aws_access_key_id="testing",
+        aws_secret_access_key="testing",
+        aws_session_token="testing",
+        region_name='us-east-1',
+    )
