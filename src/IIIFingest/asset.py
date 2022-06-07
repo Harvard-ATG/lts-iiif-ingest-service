@@ -1,6 +1,8 @@
+import logging
 import mimetypes
 import os
 from typing import Optional
+from boto3.exceptions import S3UploadFailedError
 
 import shortuuid
 from PIL import Image
@@ -67,13 +69,16 @@ class Asset:
         """
         Uploads the asset to the designated bucket.
         """
-        self.s3key = upload_image_get_metadata(
-            image_path=self.filepath,
-            bucket_name=bucket_name,
-            s3_path=s3_path,
-            session=boto_session,
-        )
-        return self.s3key
+        try:
+            self.s3key = upload_image_get_metadata(
+                image_path=self.filepath,
+                bucket_name=bucket_name,
+                s3_path=s3_path,
+                session=boto_session,
+            )
+            return self.s3key
+        except S3UploadFailedError as e:
+            logging.error(e)
 
     @classmethod
     def from_file(cls, filepath, **kwargs):

@@ -37,6 +37,8 @@ class Client:
         environment: str = "qa",
         jwt_creds=None,
         boto_session=None,
+        ingest_endpoint=None,
+        job_endpoint=None
     ):
         if not namespace or not namespace.isalnum():
             raise ValueError("Invalid or missing namespace_prefix")
@@ -72,6 +74,10 @@ class Client:
             self.job_endpoint = MPS_JOBSTATUS_ENDPOINT_PRIVATE.format(
                 environment=environment
             )
+        # Only used for testing purposes
+        elif ingest_endpoint and job_endpoint:
+            self.ingest_endpoint = ingest_endpoint
+            self.job_endpoint = job_endpoint
         else:
             self.ingest_endpoint = MPS_INGEST_ENDPOINT.format(environment=environment)
             self.job_endpoint = MPS_JOBSTATUS_ENDPOINT.format(environment=environment)
