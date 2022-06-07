@@ -66,7 +66,6 @@ def test_create_credentials_with_env_private_key_path():
             os.environ, {"LTS_IIIF_PRIVATE_KEY_PATH": private_key_path}
         ):
             creds = Credentials(issuer="atdarth", kid="atdarthdefault")
-            print(os.environ["LTS_IIIF_PRIVATE_KEY_PATH"])
             assert creds.private_key == private_key
 
 
