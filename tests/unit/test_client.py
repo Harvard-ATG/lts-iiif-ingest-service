@@ -12,9 +12,9 @@ from dotenv import load_dotenv
 
 import re
 
-from ...client import Client
-from ...auth import Credentials
-from ...settings import ROOT_DIR
+from ...src.IIIFingest.client import Client
+from ...src.IIIFingest.auth import Credentials
+from ...src.IIIFingest.settings import ROOT_DIR
 
 load_dotenv()
 

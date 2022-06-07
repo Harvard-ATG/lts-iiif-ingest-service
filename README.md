@@ -146,17 +146,17 @@ $ pre-commit install
 To run unit tests:
 
 ```
-$ pytest src/IIIFingest/tests/unit_tests/
+$ pytest tests/unit
 ```
 
-To run functional tests(tests which hit the dev bucket via AWS cli):
+To run functional tests (tests which hit the dev bucket via AWS cli):
 
 ```
-$ pytest src/IIIFingest/tests/functional_tests/
+$ pytest tests/functional
 ```
 Note:
 - To run functional test you will need to provide a `TEST_AWS_PROFILE` in your `.env` file
-- You can specify a specific function via `pytest src/IIIFingest/tests/unit_tests/test_bucket.py::<functionname>`
+- You can specify a specific function via `pytest tests/unit/test_bucket.py::<functionname>`
 
 ### PyPi release
 ```
@@ -167,6 +167,8 @@ $ tar tzf dist/IIIFingest-{VERSION}.tar.gz
 $ twine check dist/*
 $ twine upload dist/IIIFingest-{VERSION}*
 ```
+
+If you are using an API key with PyPi, your username is `__token__`. You can create a `$HOME/.pypirc` file to avoid needing to copy & paste that token ([see docs](https://packaging.python.org/en/latest/guides/distributing-packages-using-setuptools/#create-an-account)).
 
 ### Managing auth credentials
 

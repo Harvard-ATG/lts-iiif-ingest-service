@@ -10,3 +10,8 @@ skip-string-normalization = true
 # play nice with black formatter
 # see https://pycqa.github.io/isort/docs/configuration/black_compatibility.html
 profile = "black"
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+testpaths = ["tests"]
+pythonpath = "src"

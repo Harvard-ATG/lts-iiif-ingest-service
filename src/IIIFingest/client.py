@@ -3,6 +3,7 @@ import logging
 import os
 from typing import List, Optional
 
+import requests
 import shortuuid
 
 from .asset import Asset, create_asset_id
@@ -10,12 +11,19 @@ from .generate_manifest import createManifest
 from .ingest import createImageAsset, pingJob, sendIngestRequest, wrapIngestRequest
 from .settings import (
     MPS_ASSET_BASE_URL,
+    MPS_ASSET_BASE_URL_PROD,
     MPS_BUCKET_NAME,
-    MPS_INGEST_ENDPOINT,
+    MPS_DEV_INGEST_SERVICE_STATUS,
     MPS_INGEST_ENDPOINT_PRIVATE,
-    MPS_JOBSTATUS_ENDPOINT,
+    MPS_INGEST_ENDPOINT_PROD,
+    MPS_INGEST_ENDPOINT_QA,
     MPS_JOBSTATUS_ENDPOINT_PRIVATE,
+    MPS_JOBSTATUS_ENDPOINT_PROD,
+    MPS_JOBSTATUS_ENDPOINT_QA,
     MPS_MANIFEST_BASE_URL,
+    MPS_MANIFEST_BASE_URL_PROD,
+    MPS_PROD_INGEST_SERVICE_STATUS,
+    MPS_QA_INGEST_SERVICE_STATUS,
     VALID_ENVIRONMENTS,
 )
 
@@ -61,26 +69,40 @@ class Client:
         self.bucket_name = MPS_BUCKET_NAME.format(
             account=account, space=space, environment=environment
         )
-        self.asset_base_url = MPS_ASSET_BASE_URL.format(
-            environment=environment, namespace=namespace
-        )
-        self.manifest_base_url = MPS_MANIFEST_BASE_URL.format(
-            environment=environment, namespace=namespace
-        )
+
+        # Some divergence in dev/qa/prod ingest endpoint formats; prod doesn't have prod in URL, QA/Prod admin endpoint is different format than dev
         if self.environment == "dev":
+            self.asset_base_url = MPS_ASSET_BASE_URL.format(
+                environment=environment, namespace=namespace
+            )
             self.ingest_endpoint = MPS_INGEST_ENDPOINT_PRIVATE.format(
                 environment=environment
             )
             self.job_endpoint = MPS_JOBSTATUS_ENDPOINT_PRIVATE.format(
                 environment=environment
             )
-        # Only used for testing purposes
-        elif ingest_endpoint and job_endpoint:
-            self.ingest_endpoint = ingest_endpoint
-            self.job_endpoint = job_endpoint
-        else:
-            self.ingest_endpoint = MPS_INGEST_ENDPOINT.format(environment=environment)
-            self.job_endpoint = MPS_JOBSTATUS_ENDPOINT.format(environment=environment)
+            self.manifest_base_url = MPS_MANIFEST_BASE_URL.format(
+                environment=environment, namespace=namespace
+            )
+            self.ingest_service_status_endpoint = MPS_DEV_INGEST_SERVICE_STATUS
+        elif self.environment == "qa":
+            self.asset_base_url = MPS_ASSET_BASE_URL.format(
+                environment=environment, namespace=namespace
+            )
+            self.ingest_endpoint = MPS_INGEST_ENDPOINT_QA
+            self.job_endpoint = MPS_JOBSTATUS_ENDPOINT_QA
+            self.manifest_base_url = MPS_MANIFEST_BASE_URL.format(
+                environment=environment, namespace=namespace
+            )
+            self.ingest_service_status_endpoint = MPS_QA_INGEST_SERVICE_STATUS
+        elif self.environment == "prod":
+            self.asset_base_url = MPS_ASSET_BASE_URL_PROD.format(namespace=namespace)
+            self.ingest_endpoint = MPS_INGEST_ENDPOINT_PROD
+            self.job_endpoint = MPS_JOBSTATUS_ENDPOINT_PROD
+            self.manifest_base_url = MPS_MANIFEST_BASE_URL_PROD.format(
+                namespace=namespace
+            )
+            self.ingest_service_status_endpoint = MPS_PROD_INGEST_SERVICE_STATUS
 
     def _get_asset_url(self, asset_id: str) -> str:
         """Constructs the asset URL."""
@@ -260,6 +282,14 @@ class Client:
             logger.debug("Job failed or did not complete in the allotted timeframe")
 
         return status
+
+    def servicestatus(self) -> bool:
+        """
+        Returns whether the MPS ingest service is up or down
+        """
+        logger.info(f"Pinging service {self.ingest_service_status_endpoint}")
+        r = requests.get(self.ingest_service_status_endpoint)
+        return r.status_code == 200
 
     def __repr__(self):
         return (

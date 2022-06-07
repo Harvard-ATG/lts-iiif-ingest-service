@@ -6,6 +6,7 @@ on:
       - "**"
     paths:
       - 'src/IIIFingest/**'
+      - 'tests/**'
       - .github/workflows/ci.yml
 
 jobs:
@@ -37,3 +38,6 @@ jobs:
           isort src --check
           black src --check
           flake8 src
+      - name: Run unit tests
+        run: |
+          pytest tests/unit
