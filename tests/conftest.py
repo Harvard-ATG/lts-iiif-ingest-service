@@ -1,3 +1,4 @@
+import os
 import os.path
 
 import pytest
@@ -8,11 +9,13 @@ IMAGES_DIR = os.path.join(TESTS_DIR, "images")
 
 @pytest.fixture
 def images_dir():
+    """Directory of test images."""
     return IMAGES_DIR
 
 
 @pytest.fixture
 def test_images(images_dir):
+    """Images available for testing."""
     return {
         "mcihtest1.tif": {
             "filepath": os.path.join(images_dir, "mcihtest1.tif"),
@@ -71,3 +74,13 @@ def test_images(images_dir):
             "height": 581,
         },
     }
+
+
+@pytest.fixture(scope='function')
+def aws_credentials():
+    """Mocked AWS Credentials for moto."""
+    os.environ['AWS_ACCESS_KEY_ID'] = 'testing'
+    os.environ['AWS_SECRET_ACCESS_KEY'] = 'testing'
+    os.environ['AWS_SECURITY_TOKEN'] = 'testing'
+    os.environ['AWS_SESSION_TOKEN'] = 'testing'
+    os.environ['AWS_DEFAULT_REGION'] = 'us-east-1'
