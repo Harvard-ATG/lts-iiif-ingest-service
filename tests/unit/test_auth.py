@@ -83,11 +83,12 @@ def test_create_credentials_with_env_private_key_string_and_path():
 
 
 def test_make_jwt(mocker):
+    # NOTE: Using HS256 JWT algorithm to avoid generating a pub/priv key
     issuer = "atdarth"
     resources = ["ingest"]
     kid = "atdarthdefault"
     private_key = "secret"
-    algorithm = "HS256"
+    algorithm = "HS256"  # TODO: shouldn't this be RS256?
     expiration = 3600
     timezone = "America/New_York"
 
