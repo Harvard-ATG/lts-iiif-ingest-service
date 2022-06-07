@@ -1,7 +1,11 @@
+import os
+import tempfile
 from datetime import datetime, timedelta
+from unittest import mock
 from zoneinfo import ZoneInfo
 
 import jwt
+import pytest
 
 from IIIFingest.auth import Credentials
 
@@ -23,6 +27,60 @@ def test_create_credentials_with_defaults():
     assert creds.algorithm == "RS256"
     assert creds.expiration == 3600
     assert creds.timezone == "America/New_York"
+
+
+def test_create_credentials_raises_error_without_private_key():
+    with pytest.raises(ValueError):
+        Credentials(issuer="atdarth", kid="atdarthdefault")
+
+
+@mock.patch.dict(os.environ, {"LTS_IIIF_ISSUER": "atdarth"}, clear=True)
+def test_create_credentials_with_env_issuer():
+    creds = Credentials(kid="atdarthdefault", private_key_string="secret")
+    assert creds.issuer == "atdarth"
+
+
+@mock.patch.dict(os.environ, {"LTS_IIIF_KID": "atdarthdefault"}, clear=True)
+def test_create_credentials_with_env_kid():
+    creds = Credentials(issuer="atdarth", private_key_string="secret")
+    assert creds.kid == "atdarthdefault"
+
+
+@mock.patch.dict(
+    os.environ, {"LTS_IIIF_PRIVATE_KEY_STRING": "secret123string"}, clear=True
+)
+def test_create_credentials_with_env_private_key_string():
+    creds = Credentials(issuer="atdarth", kid="atdarthdefault")
+    assert creds.private_key == "secret123string"
+
+
+def test_create_credentials_with_env_private_key_path():
+    private_key = "secret123file"
+
+    with tempfile.NamedTemporaryFile() as fp:
+        fp.write(private_key.encode('utf-8'))
+        fp.flush()
+        private_key_path = fp.name
+
+        with mock.patch.dict(
+            os.environ, {"LTS_IIIF_PRIVATE_KEY_PATH": private_key_path}
+        ):
+            creds = Credentials(issuer="atdarth", kid="atdarthdefault")
+            print(os.environ["LTS_IIIF_PRIVATE_KEY_PATH"])
+            assert creds.private_key == private_key
+
+
+@mock.patch.dict(
+    os.environ,
+    {
+        "LTS_IIIF_PRIVATE_KEY_STRING": "secret123string",
+        "LTS_IIIF_PRIVATE_KEY_PATH": "/tmp/fake_private.key",
+    },
+    clear=True,
+)
+def test_create_credentials_with_env_private_key_string_and_path():
+    creds = Credentials(issuer="atdarth", kid="atdarthdefault")
+    assert creds.private_key == "secret123string"
 
 
 def test_make_jwt(mocker):
