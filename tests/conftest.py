@@ -4,6 +4,9 @@ import os.path
 import boto3
 import pytest
 
+from IIIFingest.client import Client
+from IIIFingest.auth import Credentials
+
 TESTS_DIR = os.path.dirname(os.path.abspath(__file__))
 IMAGES_DIR = os.path.join(TESTS_DIR, "images")
 
@@ -86,3 +89,26 @@ def boto_session():
         aws_session_token="testing",
         region_name='us-east-1',
     )
+
+
+@pytest.fixture
+def test_client(boto_session):
+    issuer = ("atomeka_test",)
+    kid = ("atomekadefault_test",)
+    private_key_path = (os.path.join("./auth/test", "private.key"))
+    test_jwt_cred = Credentials(
+        issuer,
+        kid,
+        private_key_path=private_key_path,
+    )
+    client = Client(
+        account="at",
+        space="atomeka",
+        namespace="at",
+        environment="dev",
+        asset_prefix="test",
+        jwt_creds=test_jwt_cred,
+        boto_session=boto_session,
+    )
+
+    return client
