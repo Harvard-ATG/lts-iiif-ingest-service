@@ -19,17 +19,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python 3.9
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4.0.0
         with:
           python-version: 3.9
-      - name: Configure cache
-        id: python-cache
-        uses: actions/cache@v2
-        if: startsWith(runner.os, 'Linux')
-        with:
-          path: |
-            ${{ env.pythonLocation}}
-          key: key-${{ runner.os }}-pip-v4-${{ hashFiles('**/requirements*.txt') }}
+          cache: 'pip'
+          cache-dependency-path: '**/requirements-dev.txt'
       - name: Install deps using Pip
         run: pip install -r requirements-dev.txt
         if: steps.python-cache.outputs.cache-hit != 'true'
