@@ -3,6 +3,7 @@ import os.path
 
 import boto3
 import pytest
+import tempfile
 
 from IIIFingest.client import Client
 from IIIFingest.auth import Credentials
@@ -93,22 +94,25 @@ def boto_session():
 
 @pytest.fixture
 def test_client(boto_session):
-    issuer = ("atomeka_test",)
-    kid = ("atomekadefault_test",)
-    private_key_path = (os.path.join("./auth/test", "private.key"))
-    test_jwt_cred = Credentials(
-        issuer,
-        kid,
-        private_key_path=private_key_path,
-    )
-    client = Client(
-        account="at",
-        space="atomeka",
-        namespace="at",
-        environment="dev",
-        asset_prefix="test",
-        jwt_creds=test_jwt_cred,
-        boto_session=boto_session,
-    )
-
-    return client
+    private_key = "secret123file"
+    with tempfile.NamedTemporaryFile() as fp:
+        fp.write(private_key.encode('utf-8'))
+        fp.flush()
+        private_key_path = fp.name
+        issuer = ("atomeka_test",)
+        kid = ("atomekadefault_test",)
+        test_jwt_cred = Credentials(
+            issuer,
+            kid,
+            private_key_path=private_key_path,
+        )
+        client = Client(
+            account="at",
+            space="atomeka",
+            namespace="at",
+            environment="dev",
+            asset_prefix="test",
+            jwt_creds=test_jwt_cred,
+            boto_session=boto_session,
+        )
+        return client
