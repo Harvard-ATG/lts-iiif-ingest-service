@@ -15,8 +15,8 @@ load_dotenv()
 
 @mock_s3
 class TestClient:
-    test_aws_profile = os.getenv('TEST_AWS_PROFILE')
-    bucket_name = os.getenv('TEST_BUCKET')
+    test_aws_profile = os.getenv('TEST_AWS_PROFILE', default="tester")
+    bucket_name = os.getenv('TEST_BUCKET', default="fake.school.it.lts.mps.testing-dev")
 
     # Define manifest-level metadata
     manifest_level_metadata = {
