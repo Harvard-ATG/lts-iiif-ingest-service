@@ -69,16 +69,13 @@ class Asset:
         """
         Uploads the asset to the designated bucket.
         """
-        try:
-            self.s3key = upload_image_get_metadata(
-                image_path=self.filepath,
-                bucket_name=bucket_name,
-                s3_path=s3_path,
-                session=boto_session,
-            )
-            return self.s3key
-        except S3UploadFailedError as e:
-            logging.error(e)
+        self.s3key = upload_image_get_metadata(
+            image_path=self.filepath,
+            bucket_name=bucket_name,
+            s3_path=s3_path,
+            session=boto_session,
+        )
+        return self.s3key
 
     @classmethod
     def from_file(cls, filepath, **kwargs):
