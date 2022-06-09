@@ -1,10 +1,8 @@
-import logging
 import mimetypes
 import os
 from typing import Optional
 
 import shortuuid
-from boto3.exceptions import S3UploadFailedError
 from PIL import Image
 
 from .bucket import upload_image_get_metadata
