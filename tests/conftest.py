@@ -116,10 +116,3 @@ def test_client(boto_session):
             boto_session=boto_session,
         )
         return client
-
-# TODO move to fixture that accepts params - https://docs.pytest.org/en/latest/example/parametrize.html#apply-indirect-on-particular-arguments
-def clean_up_delete_s3_bucket(boto_session, bucket):
-    s3 =  boto_session.resource('s3')
-    bucket = s3.Bucket(bucket)
-    bucket.object_versions.all().delete()
-    bucket.delete()
