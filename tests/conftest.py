@@ -107,9 +107,9 @@ def test_client(boto_session):
             private_key_path=private_key_path,
         )
         client = Client(
-            account="at",
-            space="atomeka",
-            namespace="at",
+            account="test",
+            space="testing-space",
+            namespace="test",
             environment="dev",
             asset_prefix="test",
             jwt_creds=test_jwt_cred,

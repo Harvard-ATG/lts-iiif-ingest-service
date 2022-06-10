@@ -1,4 +1,3 @@
-from email.policy import default
 import os.path
 
 from botocore.exceptions import ClientError
@@ -16,8 +15,9 @@ load_dotenv()
 @mock_s3
 class TestClient:
     test_aws_profile = os.getenv('TEST_AWS_PROFILE', default="tester")
-    bucket_name = os.getenv('TEST_BUCKET', default="fake.school.it.lts.mps.testing-dev")
-
+    # must match client params e.g. account space and environment - see conftest.py
+    bucket_name = os.getenv('TEST_BUCKET', default="edu.harvard.huit.lts.mps.test-testing-space-dev")
+    
     # Define manifest-level metadata
     manifest_level_metadata = {
         "labels": ["Test Manifest"],
@@ -37,8 +37,7 @@ class TestClient:
 
         assert assets is not None
         assert assets[0].filepath == image_path
-        clean_up_delete_s3_bucket(boto_session=boto_session, bucket=self.bucket_name)
-
+        
     def test_client_fail_upload(self, test_images, boto_session, test_client):
         with pytest.raises(ClientError):
             boto_session.client('s3').delete_bucket(Bucket=self.bucket_name)
@@ -70,13 +69,12 @@ class TestClient:
         manifest = client.create_manifest(
             manifest_level_metadata=self.manifest_level_metadata, assets=assets
         )
-        root_id = "https://nrs-dev.lib.harvard.edu/URN-3:AT:"
-        matches_root_id = re.search(root_id, manifest["id"])
+        root_id = "https://nrs-dev.lib.harvard.edu/URN-3:TEST:"
         item = manifest["items"][0]
         assert len(manifest["items"]) == 1
-        assert matches_root_id is not None
+        # assert matches_root_id is not None
         assert item["height"] == 564 and item["width"] == 3600
-        clean_up_delete_s3_bucket(boto_session=boto_session, bucket=self.bucket_name)
+        assert manifest["id"].startswith(root_id) == True
 
     def test_client_fail_create_manifest_missing_asset(
         self, test_images, boto_session, test_client
@@ -90,7 +88,6 @@ class TestClient:
             assert client.create_manifest(
                 manifest_level_metadata=self.manifest_level_metadata,
             )
-            clean_up_delete_s3_bucket(boto_session=boto_session, bucket=self.bucket_name)
 
     def test_client_fail_create_manifest_missing_meta_data(
         self, test_images, boto_session, test_client
@@ -103,11 +100,3 @@ class TestClient:
             images = [{"label": "Test Image", "filepath": image_path}]
             assets = client.upload(images, s3_path="testing")
             assert client.create_manifest(assets=assets)
-            clean_up_delete_s3_bucket(boto_session=boto_session, bucket=self.bucket_name)
-
-# TODO move to fixture that accepts params - https://docs.pytest.org/en/latest/example/parametrize.html#apply-indirect-on-particular-arguments
-def clean_up_delete_s3_bucket(boto_session, bucket):
-    s3 =  boto_session.resource('s3')
-    bucket = s3.Bucket(bucket)
-    bucket.object_versions.all().delete()
-    bucket.delete()

@@ -22,7 +22,6 @@ class TestBucket:
             image_path, self.test_bucket_name, s3_path
         )
         assert image_metadata == self.key
-        clean_up_delete_s3_bucket(boto_session=boto_session, bucket=self.test_bucket_name)
 
     def test_fail_upload_image_get_metadata(self, test_images):
         image_path = test_images[self.file_name]["filepath"]
@@ -35,16 +34,7 @@ class TestBucket:
             images_dir, self.test_bucket_name, s3_path
         )
         assert upload_directory_response is not False
-        clean_up_delete_s3_bucket(boto_session=boto_session, bucket=self.test_bucket_name)
 
     def test_fail_upload_directory(self, images_dir):
         with pytest.raises(ClientError):
             assert upload_directory(images_dir, self.test_bucket_name, s3_path)
-
-
-# TODO move to fixture that accepts params - https://docs.pytest.org/en/latest/example/parametrize.html#apply-indirect-on-particular-arguments
-def clean_up_delete_s3_bucket(boto_session, bucket):
-    s3 =  boto_session.resource('s3')
-    bucket = s3.Bucket(bucket)
-    bucket.object_versions.all().delete()
-    bucket.delete()
