@@ -45,8 +45,6 @@ class Client:
         environment: str = "qa",
         jwt_creds=None,
         boto_session=None,
-        ingest_endpoint=None,
-        job_endpoint=None,
     ):
         if not namespace or not namespace.isalnum():
             raise ValueError("Invalid or missing namespace_prefix")

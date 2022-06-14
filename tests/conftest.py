@@ -99,8 +99,8 @@ def test_client(boto_session):
         fp.write(private_key.encode('utf-8'))
         fp.flush()
         private_key_path = fp.name
-        issuer = ("atomeka_test",)
-        kid = ("atomekadefault_test",)
+        issuer = "atomeka_test"
+        kid = "atomekadefault_test"
         test_jwt_cred = Credentials(
             issuer,
             kid,

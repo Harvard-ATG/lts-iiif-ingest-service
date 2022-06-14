@@ -4,14 +4,11 @@ import boto3
 import pytest
 from boto3.exceptions import S3UploadFailedError
 from botocore.exceptions import ClientError
-from dotenv import load_dotenv
 
-from IIIFIngest.bucket import upload_directory, upload_image_get_metadata
+from IIIFingest.bucket import upload_directory, upload_image_get_metadata
 
 TESTS_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 IMAGES_DIR = os.path.join(TESTS_DIR, "images")
-
-load_dotenv()
 
 
 class TestFunctionalBucket:
