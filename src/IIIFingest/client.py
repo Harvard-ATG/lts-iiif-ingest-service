@@ -118,14 +118,20 @@ class Client:
         logger.debug(f"Uploading {len(images)} images")
         assets = []
         for image in images:
-            filepath = image["filepath"]
             asset_id = create_asset_id(
                 asset_prefix=self.asset_prefix,
                 identifier=image.get("id"),
             )
-            asset = Asset.from_file(
-                filepath, asset_id=asset_id, label=image.get("name")
-            )
+            if "filepath" in image:
+                filepath = image["filepath"]
+                asset = Asset.from_file(
+                    filepath, asset_id=asset_id, label=image.get("name")
+                )
+            elif "fileobj" in image:
+                fileobj = image["fileobj"]
+                asset = Asset.from_fileobj(
+                    fileobj, asset_id=asset_id, label=image.get("name")
+                )
             asset.upload(
                 bucket_name=self.bucket_name,
                 s3_path=s3_path,
