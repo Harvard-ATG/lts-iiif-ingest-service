@@ -29,7 +29,7 @@ jobs:
         if: steps.python-cache.outputs.cache-hit != 'true'
       - name: Run linting checks
         run: |
-          isort src --check
+          isort src --check --diff
           black src --check
           flake8 src
       - name: Run unit tests
