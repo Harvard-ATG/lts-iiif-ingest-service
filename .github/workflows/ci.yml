@@ -27,10 +27,14 @@ jobs:
       - name: Install deps using Pip
         run: pip install -r requirements-dev.txt
         if: steps.python-cache.outputs.cache-hit != 'true'
-      - name: Run linting checks
+      - name: Run isort
         run: |
           isort src --diff
+      - name: Run black
+        run: |
           black src --check
+      - name: Run flake8
+        run: |
           flake8 src
       - name: Run unit tests
         run: |
