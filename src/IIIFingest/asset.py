@@ -9,9 +9,7 @@ from PIL import Image
 from .bucket import upload_image_by_fileobj, upload_image_by_filepath
 
 
-def get_image_size(
-    file: Union[str, BinaryIO, TextIO]
-) -> tuple:
+def get_image_size(file: Union[str, BinaryIO, TextIO]) -> tuple:
     """
     Get the image size for a given file. File can be a file path or a file-like
     object. Returns a tuple with width and height.
@@ -71,10 +69,7 @@ class Asset:
         self.metadata = metadata if metadata else {}
 
     def upload(
-        self,
-        bucket_name: str = "",
-        s3_path: Optional[str] = None,
-        boto_session=None
+        self, bucket_name: str = "", s3_path: Optional[str] = None, boto_session=None
     ) -> str:
         """
         Uploads the asset to the designated bucket. Chooses a strategy based on

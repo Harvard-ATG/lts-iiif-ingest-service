@@ -102,7 +102,5 @@ if __name__ == "__main__":
         upload_directory(args.dir, args.bucket)
 
     if args.file and args.bucket:
-        response = upload_image_by_filepath(
-            args.file, args.bucket, s3_path=args.s3path
-        )
+        response = upload_image_by_filepath(args.file, args.bucket, s3_path=args.s3path)
         print(response)
