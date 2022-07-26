@@ -1,12 +1,12 @@
 import mimetypes
 import os
-import magic
-from typing import Optional, Union, BinaryIO, TextIO
+from typing import BinaryIO, Optional, TextIO, Union
 
+import magic
 import shortuuid
 from PIL import Image
 
-from .bucket import upload_image_by_filepath, upload_image_by_fileobj
+from .bucket import upload_image_by_fileobj, upload_image_by_filepath
 
 
 def get_image_size(
