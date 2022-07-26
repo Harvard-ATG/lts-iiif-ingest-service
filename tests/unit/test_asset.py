@@ -102,7 +102,7 @@ def test_asset_upload(test_images, mocker):
     expected_s3_key = f"{s3_path}{filename}"
 
     mocker.patch(
-        'IIIFingest.asset.upload_image_get_metadata', return_value=expected_s3_key
+        'IIIFingest.asset.upload_image_by_filepath', return_value=expected_s3_key
     )
 
     asset = Asset.from_file(image_path, asset_id="myapp1234")
