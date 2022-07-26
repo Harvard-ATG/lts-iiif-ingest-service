@@ -20,6 +20,7 @@ def get_image_size(
         w, h = img.size
         return w, h
 
+
 def get_filename_noext(filepath):
     path_root = os.path.splitext(filepath)[0]
     return os.path.basename(path_root)
@@ -73,7 +74,7 @@ class Asset:
         self,
         bucket_name: str = "",
         s3_path: Optional[str] = None,
-        boto_session = None
+        boto_session=None
     ) -> str:
         """
         Uploads the asset to the designated bucket. Chooses a strategy based on
@@ -138,7 +139,7 @@ class Asset:
             label=label,
             metadata=metadata,
         )
-    
+
     @classmethod
     def from_fileobj(cls, fileobj, **kwargs):
         """
