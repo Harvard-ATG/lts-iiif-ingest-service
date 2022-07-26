@@ -6,3 +6,4 @@ Pillow==9.1.1
 requests==2.27.1
 shortuuid==1.0.9
 pyIIIFpres==0.1.1
+python-magic==0.4.27
