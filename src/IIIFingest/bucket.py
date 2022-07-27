@@ -1,6 +1,7 @@
 import argparse
 import logging
 import os
+from typing import BinaryIO
 
 import boto3
 from boto3.exceptions import S3UploadFailedError
@@ -9,7 +10,9 @@ from botocore.exceptions import ClientError
 logger = logging.getLogger(__name__)
 
 
-def upload_image_by_filepath(filepath, bucket_name, s3_path="", session=None):
+def upload_image_by_filepath(
+    filepath: str, bucket_name: str, s3_path: str = "", session: boto3.Session = None
+) -> str:
     """
     Upload an image to S3 using a path to a file on disk.
     """
@@ -36,7 +39,13 @@ def upload_image_by_filepath(filepath, bucket_name, s3_path="", session=None):
         raise e
 
 
-def upload_image_by_fileobj(fileobj, filename, bucket_name, s3_path="", session=None):
+def upload_image_by_fileobj(
+    fileobj: BinaryIO,
+    filename: str,
+    bucket_name: str,
+    s3_path: str = "",
+    session: boto3.Session = None,
+) -> str:
     """
     Upload an image to S3 using a file object in memory.
     """
