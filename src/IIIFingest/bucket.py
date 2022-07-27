@@ -50,6 +50,7 @@ def upload_image_by_fileobj(fileobj, filename, bucket_name, s3_path="", session=
     if s3_path and not s3_path.endswith("/"):
         s3_path += "/"
 
+    # set key from path and filename
     key = f"{s3_path}{filename}" if s3_path else filename
 
     # try to upload it

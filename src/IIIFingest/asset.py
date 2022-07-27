@@ -155,7 +155,11 @@ class Asset:
             # that can be used here
             format = fileobj.content_type
         else:
-            format = magic.from_buffer(fileobj, mime=True)
+            # Get the mime type using libmagic, ensuring that the file pointer
+            # is at the top of the file.
+            validator = magic.Magic(mime=True, uncompress=True)
+            fileobj.seek(0)
+            format = validator.from_buffer(fileobj.read(1024))
 
         if kwargs.get("extension"):
             extension = kwargs.get("extension")
