@@ -1,3 +1,4 @@
+from __future__ import annotations
 import mimetypes
 import os
 from typing import BinaryIO, Optional, TextIO, Union
@@ -95,9 +96,9 @@ class Asset:
         return self.s3key
 
     @classmethod
-    def from_file(cls, filepath, **kwargs):
+    def from_file(cls, filepath: str, **kwargs) -> Asset:
         """
-        Constructs an Asset from a file.
+        Constructs an Asset from a file path.
         """
         asset_id = kwargs.get("asset_id")
 
@@ -136,9 +137,39 @@ class Asset:
         )
 
     @classmethod
-    def from_fileobj(cls, fileobj, **kwargs):
+    def from_fileobj(cls, fileobj: BinaryIO, **kwargs) -> Asset:
         """
-        Constructs an Asset from a file.
+        Constructs an Asset from a file-like object.
+
+        Args:
+            fileobj:
+                A file-like object from which the asset will be generated.
+            **kwargs:
+                Several specific kwargs can be passed to the function, but if
+                they are omitted they will be inferred from the file. These
+                optional arguments are specified below.
+            asset_id:
+                A unique identifier for the asset. If none is specified, this
+                attribute of the Asset object output will be None.
+            width:
+                Width of the image in pixels. Ignored if height is not present.
+            height:
+                Height of the image in pixels. Ignored if width is not present.
+            format:
+                Mime type of the image. If not specified, this property can be
+                inferred from the content_type attribute on a Django
+                UploadedFile object, or directly from the file.
+            extension:
+                File extension for the image. If not specified, it is inferred
+                from the mime type.
+            label:
+                An optional label for the image. If none is specified, then the
+                asset_id will be used as a label.
+            metadata:
+                Metadata dictionary to be assigned to the asset.
+
+        Returns:
+            A newly constructed asset object.
         """
         asset_id = kwargs.get("asset_id")
 
