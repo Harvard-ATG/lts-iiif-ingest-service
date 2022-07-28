@@ -38,7 +38,12 @@ def create_asset_id(
 
 class Asset:
     """
-    Constructs an Asset to be ingested.
+    Constructs an Asset to be ingested. Assets are expected to have either a
+    fileobj or a filepath, but not both. To that end, Assets are expected to be
+    created with either the `from_file` or `from_fileobj` functions. If an
+    asset is created with both `filepath` and `fileobj` properties, `filepath`
+    will be used when uploading. If neither attribute is specified, the
+    `upload()` function will fail with a `NameError`.
     """
 
     def __init__(
@@ -170,7 +175,7 @@ class Asset:
                 Metadata dictionary to be assigned to the asset.
 
         Returns:
-            A newly constructed asset object.
+            A newly constructed `Asset` object.
         """
         asset_id = kwargs.get("asset_id")
 
@@ -191,7 +196,7 @@ class Asset:
             # is at the top of the file.
             validator = magic.Magic(mime=True, uncompress=True)
             fileobj.seek(0)
-            format = validator.from_buffer(fileobj.read(1024))
+            format = validator.from_buffer(fileobj.read(2048))
 
         if kwargs.get("extension"):
             extension = kwargs.get("extension")
