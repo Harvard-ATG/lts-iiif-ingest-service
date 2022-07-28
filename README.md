@@ -4,6 +4,20 @@ This is a Python library which facilitates interacting with the Harvard LTS (Lib
 
 ## Getting Started
 
+### Requirements
+
+Requires `libmagic` to be installed on the machine running `IIIFingest` for handling file object uploads. On Mac, this can be installed with
+
+```
+brew install libmagic
+```
+
+On Ubuntu, it can be installed with
+
+```
+apt install libmagic-dev
+```
+
 ### Installation
 
 To install via [pypi.org](https://pypi.org/project/IIIFingest):

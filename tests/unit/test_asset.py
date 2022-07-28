@@ -66,7 +66,7 @@ def test_create_asset_with_no_asset_id():
     assert asset.asset_id is None
 
 
-def test_create_asset_from_file(test_images):
+def test_create_asset_from_filepath(test_images):
     test_image = test_images["mcihtest1.tif"]
     image_path = test_image["filepath"]
     width = test_image["width"]
@@ -94,7 +94,36 @@ def test_create_asset_from_file(test_images):
     assert asset.height == height
 
 
-def test_asset_upload(test_images, mocker):
+def test_create_asset_from_fileobj(test_images):
+    test_image = test_images["mcihtest1.tif"]
+    image_path = test_image["filepath"]
+    width = test_image["width"]
+    height = test_image["height"]
+    format = test_image["format"]
+    extension = mimetypes.guess_extension(test_image["format"])
+    label = "Test Image"
+    metadata = [{"label": "Test", "value": "Image level metadata"}]
+    asset_id = "myapp1234"
+
+    with open(image_path, "rb") as fp:
+        asset = Asset.from_fileobj(
+            fp,
+            asset_id=asset_id,
+            label=label,
+            metadata=metadata,
+        )
+
+        assert asset.asset_id == asset_id
+        assert asset.fileobj == fp
+        assert asset.format == format
+        assert asset.extension == extension
+        assert asset.label == label
+        assert asset.metadata == metadata
+        assert asset.width == width
+        assert asset.height == height
+
+
+def test_asset_upload_by_filepath(test_images, mocker):
     test_image = test_images["mcihtest1.tif"]
     image_path = test_image["filepath"]
     filename = test_image["filename"]
@@ -102,10 +131,28 @@ def test_asset_upload(test_images, mocker):
     expected_s3_key = f"{s3_path}{filename}"
 
     mocker.patch(
-        'IIIFingest.asset.upload_image_get_metadata', return_value=expected_s3_key
+        'IIIFingest.asset.upload_image_by_filepath', return_value=expected_s3_key
     )
 
     asset = Asset.from_file(image_path, asset_id="myapp1234")
     actual_s3_key = asset.upload(bucket_name="ingestbucket", s3_path=s3_path)
+
+    assert actual_s3_key == expected_s3_key
+
+
+def test_asset_upload_by_fileobj(test_images, mocker):
+    test_image = test_images["mcihtest1.tif"]
+    image_path = test_image["filepath"]
+    filename = test_image["filename"]
+    s3_path = "img/"
+    expected_s3_key = f"{s3_path}{filename}"
+
+    mocker.patch(
+        'IIIFingest.asset.upload_image_by_fileobj', return_value=expected_s3_key
+    )
+
+    with open(image_path, "rb") as fileobj:
+        asset = Asset.from_fileobj(fileobj, asset_id="myapp1234")
+        actual_s3_key = asset.upload(bucket_name="ingestbucket", s3_path=s3_path)
 
     assert actual_s3_key == expected_s3_key
