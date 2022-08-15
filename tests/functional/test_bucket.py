@@ -1,4 +1,5 @@
 import os.path
+from hashlib import md5
 
 import boto3
 import pytest
@@ -33,10 +34,13 @@ class TestFunctionalBucket:
 
     def test_functional_upload_image_by_fileobj(self):
         with open(self.image_path, "rb") as fileobj:
+            hash = md5(fileobj)
             image_metadata = upload_image_by_fileobj(
                 fileobj, self.file_name, self.bucket_name, self.s3_path, self.default_session
             )
-            assert image_metadata == self.key
+            header = self.default_session.client('s3').head_object(
+                self.bucket_name, image_metadata)
+            assert header['ETag'] == hash
         # cleanup
         s3 = self.default_session.client('s3')
         s3.delete_object(Bucket=self.bucket_name, Key=self.key)

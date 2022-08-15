@@ -5,7 +5,7 @@ from typing import BinaryIO
 
 import boto3
 from boto3.exceptions import S3UploadFailedError
-from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError, WaiterError
 
 logger = logging.getLogger(__name__)
 
@@ -65,8 +65,13 @@ def upload_image_by_fileobj(
     # try to upload it
     try:
         bucket.upload_fileobj(Fileobj=fileobj, Key=key)
+        try:
+            # Ensure that the upload has completed before returning key
+            s3.Object(bucket_name, key).wait_until_exists()
+        except WaiterError as e:
+            logging.error(e)
+            raise(e)
         return key
-
     except S3UploadFailedError as e:
         logging.error(e)
         raise e
