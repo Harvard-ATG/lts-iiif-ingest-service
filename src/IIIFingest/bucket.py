@@ -70,7 +70,7 @@ def upload_image_by_fileobj(
             s3.Object(bucket_name, key).wait_until_exists()
         except WaiterError as e:
             logging.error(e)
-            raise(e)
+            raise (e)
         return key
     except S3UploadFailedError as e:
         logging.error(e)
