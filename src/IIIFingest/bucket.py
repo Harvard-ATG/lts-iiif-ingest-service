@@ -1,4 +1,5 @@
 import argparse
+import hashlib
 import logging
 import os
 from typing import BinaryIO
@@ -8,6 +9,15 @@ from boto3.exceptions import S3UploadFailedError
 from botocore.exceptions import ClientError, WaiterError
 
 logger = logging.getLogger(__name__)
+
+
+def md5_of_file(fileobj):
+    hash_md5 = hashlib.md5()
+    fileobj.seek(0)
+    for chunk in iter(lambda: fileobj.read(4096), b""):
+        hash_md5.update(chunk)
+    fileobj.seek(0)
+    return hash_md5.hexdigest()
 
 
 def upload_image_by_filepath(
@@ -61,13 +71,14 @@ def upload_image_by_fileobj(
 
     # set key from path and filename
     key = f"{s3_path}{filename}" if s3_path else filename
+    hash = md5_of_file(fileobj)
 
     # try to upload it
     try:
         bucket.upload_fileobj(Fileobj=fileobj, Key=key)
         try:
             # Ensure that the upload has completed before returning key
-            s3.Object(bucket_name, key).wait_until_exists()
+            s3.Object(bucket_name, key).wait_until_exists(IfMatch=hash)
         except WaiterError as e:
             logging.error(e)
             raise (e)
