@@ -1,4 +1,5 @@
 import argparse
+import base64
 import hashlib
 import logging
 import os
@@ -63,7 +64,10 @@ def upload_image_by_fileobj(
     key = f"{s3_path}{filename}" if s3_path else filename
 
     # Get an md5 hash of the object to verify the upload
-    hash = hashlib.md5(fileobj.read()).hexdigest()
+    fileobj.seek(0)
+    digest = hashlib.md5(fileobj.read()).digest()
+    hash = base64.b64encode(digest).decode('utf-8')
+    fileobj.seek(0)
 
     # try to upload it
     try:
