@@ -11,15 +11,6 @@ from botocore.exceptions import ClientError, WaiterError
 logger = logging.getLogger(__name__)
 
 
-def md5_of_file(fileobj):
-    hash_md5 = hashlib.md5()
-    fileobj.seek(0)
-    for chunk in iter(lambda: fileobj.read(4096), b""):
-        hash_md5.update(chunk)
-    fileobj.seek(0)
-    return hash_md5.hexdigest()
-
-
 def upload_image_by_filepath(
     filepath: str, bucket_name: str, s3_path: str = "", session: boto3.Session = None
 ) -> str:
@@ -62,8 +53,7 @@ def upload_image_by_fileobj(
     # Set up boto3 session, if need be
     if not session:
         session = boto3._get_default_session()
-    s3 = session.resource('s3')
-    bucket = s3.Bucket(bucket_name)
+    s3 = session.client('s3')
 
     # make sure s3_path ends in a slash
     if s3_path and not s3_path.endswith("/"):
@@ -71,17 +61,13 @@ def upload_image_by_fileobj(
 
     # set key from path and filename
     key = f"{s3_path}{filename}" if s3_path else filename
-    hash = md5_of_file(fileobj)
+
+    # Get an md5 hash of the object to verify the upload
+    hash = hashlib.md5(fileobj.read()).hexdigest()
 
     # try to upload it
     try:
-        bucket.upload_fileobj(Fileobj=fileobj, Key=key)
-        try:
-            # Ensure that the upload has completed before returning key
-            s3.Object(bucket_name, key).wait_until_exists(IfMatch=hash)
-        except WaiterError as e:
-            logging.error(e)
-            raise (e)
+        s3.put_object(Bucket=bucket_name, Body=fileobj, ContentMD5=hash, Key=key)
         return key
     except S3UploadFailedError as e:
         logging.error(e)

@@ -5,8 +5,9 @@ from moto import mock_s3
 
 from IIIFingest.bucket import (
     upload_directory,
+    upload_image_by_fileobj,
     upload_image_by_filepath,
-    upload_image_by_fileobj)
+)
 
 s3_path = "testing/"
 
@@ -38,12 +39,14 @@ class TestBucket:
         UploadedFile object, which have the same attributes and methods, plus
         additional django-specific functionality.
         """
-        boto_session.resource('s3').create_bucket(Bucket=self.test_bucket_name)
+        s3 = boto_session.resource('s3')
+        s3.create_bucket(Bucket=self.test_bucket_name)
         with open(test_images[self.file_name]['filepath'], "rb") as fileobj:
-            image_metadata = upload_image_by_fileobj(
+            image_s3_key = upload_image_by_fileobj(
                 fileobj, self.file_name, self.test_bucket_name, s3_path
             )
-            assert image_metadata == self.key
+        # Verify output of upload function
+        assert image_s3_key == self.key
 
     def test_fail_upload_image_by_fileobj(self, test_images):
         """
