@@ -7,7 +7,7 @@ from typing import BinaryIO
 
 import boto3
 from boto3.exceptions import S3UploadFailedError
-from botocore.exceptions import ClientError, WaiterError
+from botocore.exceptions import ClientError
 
 logger = logging.getLogger(__name__)
 
