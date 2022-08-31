@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import re
 from typing import List, Optional
 
 import requests
@@ -28,6 +29,7 @@ from .settings import (
 )
 
 logger = logging.getLogger(__name__)
+nrs_namespace_invalid = re.compile("[^a-zA-Z0-9\.]")
 
 
 class Client:
@@ -46,7 +48,7 @@ class Client:
         jwt_creds=None,
         boto_session=None,
     ):
-        if not namespace or not namespace.isalnum():
+        if not namespace or not nrs_namespace_invalid.search(namespace):
             raise ValueError("Invalid or missing namespace_prefix")
         if environment not in VALID_ENVIRONMENTS:
             raise ValueError(
