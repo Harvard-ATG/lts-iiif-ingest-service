@@ -48,7 +48,7 @@ class Client:
         jwt_creds=None,
         boto_session=None,
     ):
-        if not namespace or not nrs_namespace_invalid.search(namespace):
+        if not namespace or nrs_namespace_invalid.search(namespace):
             raise ValueError("Invalid or missing namespace_prefix")
         if environment not in VALID_ENVIRONMENTS:
             raise ValueError(
