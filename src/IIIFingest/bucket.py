@@ -1,6 +1,9 @@
 import argparse
+import base64
+import hashlib
 import logging
 import os
+from typing import BinaryIO
 
 import boto3
 from boto3.exceptions import S3UploadFailedError
@@ -9,30 +12,67 @@ from botocore.exceptions import ClientError
 logger = logging.getLogger(__name__)
 
 
-def upload_image_get_metadata(image_path, bucket_name, s3_path="", session=None):
+def upload_image_by_filepath(
+    filepath: str, bucket_name: str, s3_path: str = "", session: boto3.Session = None
+) -> str:
+    """
+    Upload an image to S3 using a path to a file on disk.
+    """
+    # Set up boto3 session, if need be
     if not session:
         session = boto3._get_default_session()
     s3 = session.resource('s3')
     bucket = s3.Bucket(bucket_name)
 
-    _, file_name = os.path.split(image_path)
+    _, file_name = os.path.split(filepath)
     # make sure s3_path ends in a slash
     if s3_path and not s3_path.endswith("/"):
         s3_path += "/"
-
-    # extend to handle in-memory later, once we have file upload on an application
-    # https://thecodinginterface.com/blog/aws-s3-python-boto3/
-    # bytes_data =
-    # obj = s3.Object(bucket_name, f"{s3_path}{file_name}")
-    # obj.put(Body=bytes_data)
 
     key = f"{s3_path}{file_name}" if s3_path else file_name
 
     # try to upload it
     try:
-        bucket.upload_file(Filename=image_path, Key=key)
+        bucket.upload_file(Filename=filepath, Key=key)
         return key
 
+    except S3UploadFailedError as e:
+        logging.error(e)
+        raise e
+
+
+def upload_image_by_fileobj(
+    fileobj: BinaryIO,
+    filename: str,
+    bucket_name: str,
+    s3_path: str = "",
+    session: boto3.Session = None,
+) -> str:
+    """
+    Upload an image to S3 using a file object in memory.
+    """
+    # Set up boto3 session, if need be
+    if not session:
+        session = boto3._get_default_session()
+    s3 = session.client('s3')
+
+    # make sure s3_path ends in a slash
+    if s3_path and not s3_path.endswith("/"):
+        s3_path += "/"
+
+    # set key from path and filename
+    key = f"{s3_path}{filename}" if s3_path else filename
+
+    # Get an md5 hash of the object to verify the upload
+    fileobj.seek(0)
+    digest = hashlib.md5(fileobj.read()).digest()
+    hash = base64.b64encode(digest).decode('utf-8')
+    fileobj.seek(0)
+
+    # try to upload it
+    try:
+        s3.put_object(Bucket=bucket_name, Body=fileobj, ContentMD5=hash, Key=key)
+        return key
     except S3UploadFailedError as e:
         logging.error(e)
         raise e
@@ -78,7 +118,5 @@ if __name__ == "__main__":
         upload_directory(args.dir, args.bucket)
 
     if args.file and args.bucket:
-        response = upload_image_get_metadata(
-            args.file, args.bucket, s3_path=args.s3path
-        )
+        response = upload_image_by_filepath(args.file, args.bucket, s3_path=args.s3path)
         print(response)
