@@ -29,7 +29,7 @@ from .settings import (
 )
 
 logger = logging.getLogger(__name__)
-nrs_namespace_invalid = re.compile("[^a-zA-Z0-9\.]")
+nrs_namespace_invalid = re.compile(r"[^a-zA-Z0-9\.]")
 
 
 class Client:
