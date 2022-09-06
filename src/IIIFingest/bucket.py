@@ -8,6 +8,7 @@ from typing import BinaryIO
 import boto3
 from boto3.exceptions import S3UploadFailedError
 from botocore.exceptions import ClientError
+from deprecated import deprecated
 
 logger = logging.getLogger(__name__)
 
@@ -76,6 +77,16 @@ def upload_image_by_fileobj(
     except S3UploadFailedError as e:
         logging.error(e)
         raise e
+
+
+@deprecated(
+    version='1.1.0',
+    reason="This function is deprecated, use `upload_image_by_filepath` instead",
+)
+def upload_image_get_metadata(
+    filepath: str, bucket_name: str, s3_path: str = "", session: boto3.Session = None
+) -> str:
+    return upload_image_by_filepath(filepath, bucket_name, s3_path, session)
 
 
 def upload_directory(path, bucket_name, s3_path="", session=None):

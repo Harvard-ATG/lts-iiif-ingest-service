@@ -7,6 +7,7 @@ from IIIFingest.bucket import (
     upload_directory,
     upload_image_by_fileobj,
     upload_image_by_filepath,
+    upload_image_get_metadata,
 )
 
 s3_path = "testing/"
@@ -66,6 +67,18 @@ class TestBucket:
                     s3_path)
             except ClientError as e:
                 assert e.response['Error']['Code'] == "NoSuchBucket"
+
+    def test_deprecated_upload(self, test_images, boto_session):
+        """
+        Make sure that the deprecated `upload_image_get_metadata` function
+        raises a deprecation warning when called.
+        """
+        image_path = test_images[self.file_name]["filepath"]
+        boto_session.resource('s3').create_bucket(Bucket=self.test_bucket_name)
+        with pytest.deprecated_call():
+            upload_image_get_metadata(
+                image_path, self.test_bucket_name, s3_path
+            )
 
     def test_upload_directory(self, images_dir, boto_session):
         boto_session.resource('s3').create_bucket(Bucket=self.test_bucket_name)
