@@ -47,6 +47,7 @@ class Client:
         environment: str = "qa",
         jwt_creds=None,
         boto_session=None,
+        with_uuid: bool = True,
     ):
         if not namespace or nrs_namespace_invalid.search(namespace):
             raise ValueError("Invalid or missing namespace_prefix")
@@ -65,6 +66,7 @@ class Client:
         self.environment = environment
         self.jwt_creds = jwt_creds
         self.boto_session = boto_session
+        self.with_uuid = with_uuid
 
         self.bucket_name = MPS_BUCKET_NAME.format(
             account=account, space=space, environment=environment
@@ -112,27 +114,43 @@ class Client:
         """Constructs the manifest URL."""
         return f"{self.manifest_base_url}{manifest_name}:MANIFEST:{prezi_version}"
 
-    def upload(self, images: List[dict], s3_path: str = "") -> List[Asset]:
+    def upload(
+        self, images: List[dict], s3_path: str = "", with_uuid=None
+    ) -> List[Asset]:
         """
         Uploads a list of images to the MPS ingest bucket in S3.
         Returns a list of assets.
+        image dict format
+        {
+            "id": "id123",
+            "label": "",
+            "filepath": ".../lts-iiif-ingest-service/tests/images/27.586.1-cm-2016-02-09.tif", # either filepath or fileobj is required
+            "fileobj": "", # either filepath or fileobj is required
+        }
         """
+        if with_uuid is None:
+            with_uuid = self.with_uuid
         logger.debug(f"Uploading {len(images)} images")
         assets = []
         for image in images:
-            asset_id = create_asset_id(
-                asset_prefix=self.asset_prefix,
-                identifier=image.get("id"),
-            )
+            if image.get("asset_id"):
+                asset_id = image.get("asset_id")
+            else:
+                asset_id = create_asset_id(
+                    asset_prefix=self.asset_prefix,
+                    identifier=image.get("id"),
+                    with_uuid=with_uuid,
+                )
+
             if "filepath" in image:
                 filepath = image["filepath"]
                 asset = Asset.from_file(
-                    filepath, asset_id=asset_id, label=image.get("name")
+                    filepath, asset_id=asset_id, label=image.get("label")
                 )
             elif "fileobj" in image:
                 fileobj = image["fileobj"]
                 asset = Asset.from_fileobj(
-                    fileobj, asset_id=asset_id, label=image.get("name")
+                    fileobj, asset_id=asset_id, label=image.get("label")
                 )
             asset.upload(
                 bucket_name=self.bucket_name,
