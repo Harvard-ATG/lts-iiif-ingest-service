@@ -38,6 +38,7 @@ class TestClient:
         image_dict = assets[0]
         # assert image_dict.filepath == image_path
         assert image_dict.asset_id is not None
+        assert image_dict.label == "Test Image"
 
     def test_client_upload_generate_asset_id(
         self, test_images, boto_session, test_client
@@ -56,6 +57,7 @@ class TestClient:
         image_dict = assets[0]
         assert image_dict.filepath == image_path
         assert image_dict.asset_id.startswith(client.asset_prefix + test_image_id)
+        assert image_dict.label == "Test Image"
 
     def test_client_upload_existing_asset_id(
         self, test_images, boto_session, test_client
@@ -81,6 +83,7 @@ class TestClient:
 
         image_dict = assets[0]
         assert image_dict.asset_id == asset_id
+        assert image_dict.label == "Test Image"
 
     def test_client_upload_no_uuid(self, test_images, boto_session, test_client):
         boto_session.resource('s3').create_bucket(Bucket=self.bucket_name)
@@ -95,6 +98,7 @@ class TestClient:
 
         image_dict = assets[0]
         assert image_dict.asset_id == f"{client.asset_prefix}{test_image_id}"
+        assert image_dict.label == "Test Image"
 
     def test_client_fail_upload_non_alphanumeric_asset_id(
         self, test_images, boto_session, test_client
