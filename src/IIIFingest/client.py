@@ -125,7 +125,8 @@ class Client:
             "id": "id123",
             "label": "",
             "filepath": ".../lts-iiif-ingest-service/tests/images/27.586.1-cm-2016-02-09.tif", # either filepath or fileobj is required
-            "fileobj": "", # either filepath or fileobj is required
+            "fileobj": "", # either filepath or fileobj is required,
+            "asset_id": "mcih235dad6fd15742bc91d167cbd59c7756" # no dashes allowed
         }
         """
         if with_uuid is None:
