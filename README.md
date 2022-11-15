@@ -176,7 +176,7 @@ Note:
 ```
 // VERSION = 1.0.4.1, 1.0.5, etc
 $ pip install twine
-$ python setup.py sdist bdist_wheel
+$ python3 -m build # uses PyPA `build` tool: https://packaging.python.org/en/latest/tutorials/packaging-projects/
 $ tar tzf dist/IIIFingest-{VERSION}.tar.gz
 $ twine check dist/*
 $ twine upload dist/IIIFingest-{VERSION}*
