@@ -8,6 +8,7 @@ on:
       - 'src/IIIFingest/**'
       - 'tests/**'
       - .github/workflows/ci.yml
+  pull_request:
 
 jobs:
   qa:
