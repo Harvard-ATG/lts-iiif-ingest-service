@@ -12,18 +12,24 @@ on:
 jobs:
   qa:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.7", "3.8", "3.9", "3.10", "3.11"]
     defaults:
       run:
         working-directory: .
 
     steps:
       - uses: actions/checkout@v3
-      - name: Set up Python 3.9
+      - name: Set up Python ${{ matrix.python-version}}
         uses: actions/setup-python@v4
         with:
-          python-version: 3.9
+          python-version: ${{ matrix.python }}
           cache: 'pip'
-          cache-dependency-path: '**/requirements-dev.txt'
+          cache-dependency-path: |
+            **/requirements-dev.txt
+            **/requirements.txt
+            **/setup.cfg
       - name: Install deps using Pip
         run: pip install -r requirements-dev.txt
         if: steps.python-cache.outputs.cache-hit != 'true'
