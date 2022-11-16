@@ -2,9 +2,14 @@ import logging
 import time
 from datetime import datetime
 from urllib import request
-from zoneinfo import ZoneInfo
 
 import requests
+
+# Backports supports Python 3.6-3.8
+try:
+    from zoneinfo import ZoneInfo
+except ImportError:
+    from backports.zoneinfo import ZoneInfo
 
 logger = logging.getLogger(__name__)
 

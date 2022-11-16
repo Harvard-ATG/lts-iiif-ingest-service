@@ -2,10 +2,15 @@ import os
 import tempfile
 from datetime import datetime, timedelta
 from unittest import mock
-from zoneinfo import ZoneInfo
 
 import jwt
 import pytest
+
+# Backports supports Python 3.6-3.8
+try:
+    from zoneinfo import ZoneInfo
+except ImportError:
+    from backports.zoneinfo import ZoneInfo
 
 from IIIFingest.auth import Credentials
 

@@ -8,3 +8,4 @@ shortuuid==1.0.9
 pyIIIFpres==0.1.1
 python-magic==0.4.27
 Deprecated==1.2.13
+backports.zoneinfo>=0.2.1;python_version<"3.9"

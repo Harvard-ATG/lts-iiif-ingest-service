@@ -1,9 +1,14 @@
 import logging
 import os
 from datetime import datetime, timedelta
-from zoneinfo import ZoneInfo
 
 import jwt
+
+# Backports supports Python 3.6-3.8
+try:
+    from zoneinfo import ZoneInfo
+except ImportError:
+    from backports.zoneinfo import ZoneInfo
 
 from .settings import ROOT_DIR
 
