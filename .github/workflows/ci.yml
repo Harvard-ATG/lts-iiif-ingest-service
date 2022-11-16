@@ -28,12 +28,9 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
           cache: 'pip'
-          cache-dependency-path: |
-            **/requirements-dev.txt
-            **/requirements.txt
-            **/setup.cfg
+          cache-dependency-path: '**/setup.cfg'
       - name: Install deps using Pip
-        run: pip install -r requirements-dev.txt
+        run: pip install -e ".[dev]"
         if: steps.python-cache.outputs.cache-hit != 'true'
       - name: Run isort
         run: |
