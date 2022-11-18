@@ -1,0 +1,37 @@
+name: unit tests
+
+on:
+  push:
+    branches:
+      - "**"
+    paths:
+      - 'src/IIIFingest/**'
+      - 'tests/**'
+      - .github/workflows/unit_tests.yml
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  unit_tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.7", "3.8", "3.9", "3.10", "3.11"]
+    defaults:
+      run:
+        working-directory: .
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ matrix.python-version}}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python }}
+          cache: 'pip'
+          cache-dependency-path: '**/setup.cfg'
+      - name: Install deps using Pip
+        run: pip install -e ".[dev]"
+        if: steps.python-cache.outputs.cache-hit != 'true'
+      - name: Run unit tests
+        run: |
+          pytest tests/unit
