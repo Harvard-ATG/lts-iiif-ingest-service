@@ -142,7 +142,7 @@ $ cd lts-iiif-ingest-service
 ```
 $ python3 -m venv venv
 $ source venv/bin/activate
-$ pip install -r requirements-dev.txt
+$ pip install -e ".[dev]"
 ```
 
 Note that this will install all packages needed for the library as well as linting and pre-commit hooks.
