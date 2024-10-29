@@ -17,9 +17,9 @@ MPS_JOBSTATUS_ENDPOINT_PRIVATE = (
 )
 
 # MPS API endpoints - QA and prod (new public ALBs)
-MPS_INGEST_ENDPOINT_QA = "https://mps-ingest-qa.lib.harvard.edu/admin/ingest/initialize"
+MPS_INGEST_ENDPOINT_QA = "https://mps-admin-qa.lib.harvard.edu/admin/ingest/initialize"
 MPS_JOBSTATUS_ENDPOINT_QA = (
-    "https://mps-ingest-qa.lib.harvard.edu/admin/ingest/jobstatus/"
+    "https://mps-admin-qa.lib.harvard.edu/admin/ingest/jobstatus/"
 )
 MPS_INGEST_ENDPOINT_PROD = "https://mps-ingest.lib.harvard.edu/admin/ingest/initialize"
 MPS_JOBSTATUS_ENDPOINT_PROD = (
@@ -42,7 +42,7 @@ MPS_DEV_INGEST_SERVICE_STATUS = (
     "https://mps-admin-dev.lib.harvard.edu/admin/ingest/version"
 )
 MPS_QA_INGEST_SERVICE_STATUS = (
-    "https://mps-ingest-qa.lib.harvard.edu/admin/ingest/version"
+    "https://mps-admin-qa.lib.harvard.edu/admin/ingest/version"
 )
 MPS_PROD_INGEST_SERVICE_STATUS = (
     "https://mps-ingest.lib.harvard.edu/admin/ingest/version"
