@@ -21,9 +21,9 @@ MPS_INGEST_ENDPOINT_QA = "https://mps-admin-qa.lib.harvard.edu/admin/ingest/init
 MPS_JOBSTATUS_ENDPOINT_QA = (
     "https://mps-admin-qa.lib.harvard.edu/admin/ingest/jobstatus/"
 )
-MPS_INGEST_ENDPOINT_PROD = "https://mps-ingest.lib.harvard.edu/admin/ingest/initialize"
+MPS_INGEST_ENDPOINT_PROD = "https://mps-admin.lib.harvard.edu/admin/ingest/initialize"
 MPS_JOBSTATUS_ENDPOINT_PROD = (
-    "https://mps-ingest.lib.harvard.edu/admin/ingest/jobstatus/"
+    "https://mps-admin.lib.harvard.edu/admin/ingest/jobstatus/"
 )
 
 # Base URL for images
@@ -45,5 +45,5 @@ MPS_QA_INGEST_SERVICE_STATUS = (
     "https://mps-admin-qa.lib.harvard.edu/admin/ingest/version"
 )
 MPS_PROD_INGEST_SERVICE_STATUS = (
-    "https://mps-ingest.lib.harvard.edu/admin/ingest/version"
+    "https://mps-admin.lib.harvard.edu/admin/ingest/version"
 )
