@@ -81,7 +81,7 @@ def jobStatus(
     job_id: str,
     endpoint: str = "https://mps-admin-qa.lib.harvard.edu/admin/ingest/jobstatus/",
 ) -> request:
-    url = f"{endpoint}{job_id}"
+    url = f"{endpoint}{job_id}/"
     r = requests.get(url)
     return r
 
